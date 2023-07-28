@@ -122,14 +122,8 @@ public class ShoppingCartService {
         return shoppingCart;
     }
 
-    public ShoppingCart createShoppingCart(List<ShoppingCartItem> items) {
-        ShoppingCart createdShoppingCart = shoppingCartRepository.save(new ShoppingCart());
-        if (items.size() > 0) {
-            shoppingCartItemRepository.saveAll(items);
-            Long id = createdShoppingCart.getId();
-            createdShoppingCart = shoppingCartRepository.findById(id).get();
-        }
-        return createdShoppingCart;
+    public ShoppingCart createShoppingCart() {
+        return shoppingCartRepository.save(new ShoppingCart());
     }
 
     public Optional<ShoppingCartItem> getShoppingCartItem(Long cartId, Long itemId) {

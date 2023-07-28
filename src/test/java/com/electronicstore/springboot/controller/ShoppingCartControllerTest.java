@@ -47,7 +47,7 @@ public class ShoppingCartControllerTest {
     public void testNewShoppingCart(){
         String requestJson = "{\"items\": []}";
 
-        when(shoppingCartService.createShoppingCart(anyList())).thenReturn(shoppingCartWithZeroItem);
+        when(shoppingCartService.createShoppingCart()).thenReturn(shoppingCartWithZeroItem);
 
         String productUri = appContext.getBaseUriBuilder().path("shoppingCarts").toUriString();
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
@@ -64,36 +64,7 @@ public class ShoppingCartControllerTest {
         assertThat(responseJson, jsonPartEquals("id", 1));
     }
 
-    //@Test
-    public void testNewShoppingCartWithItems(){
-        String requestJson = "{\"items\": ["+
-                    "{\"product\":{\"id\":"+10+"}}"
-                    +"]}";
 
-        shoppingCartWithOneItem.setItems(List.of(oneItem));
-        when(shoppingCartService.createShoppingCart(anyList())).thenReturn(shoppingCartWithOneItem);
-
-        String productUri = appContext.getBaseUriBuilder().path("shoppingCarts").toUriString();
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-        headers.add(CONTENT_TYPE,"application/json");
-        HttpEntity<String> requestEntity = new HttpEntity<>(requestJson, headers);
-
-        ResponseEntity<String> response = restTemplate.exchange(productUri, HttpMethod.POST, requestEntity, String.class);
-        HttpHeaders httpHeaders = response.getHeaders();
-
-        assertEquals(HttpStatus.CREATED.value(), response.getStatusCode().value());
-
-        String contentLocation = appContext.getBaseUriBuilder().pathSegment("shoppingCarts","{id}").buildAndExpand(shoppingCartWithOneItem.getId()).toUriString();
-        assertEquals(List.of(contentLocation), httpHeaders.get(LOCATION));
-
-        String responseJson = response.getBody();
-
-        assertThat(responseJson, jsonNodePresent("id"));
-        assertThat(responseJson, jsonNodePresent("items[0]"));
-        assertThat(responseJson, jsonPartEquals("id", 2));
-        assertThat(responseJson, jsonPartEquals("items[0].id", 3));
-        assertThat(responseJson, jsonPartEquals("items[0].product.id", 10));
-    }
 
     //@Test
     public void testGetShoppingCart(){

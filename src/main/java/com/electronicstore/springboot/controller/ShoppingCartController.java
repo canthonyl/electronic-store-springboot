@@ -45,9 +45,9 @@ public class ShoppingCartController {
     }
 
     @PostMapping
-    public ResponseEntity<ShoppingCartResponse> createShoppingCart(@RequestBody ShoppingCartRequest request) {
-        List<ShoppingCartItem> initialItems = Optional.ofNullable(request.getShoppingCartItems()).orElse(Collections.emptyList());
-        ShoppingCart shoppingCart = shoppingCartService.createShoppingCart(initialItems);
+    public ResponseEntity<ShoppingCartResponse> createShoppingCart(/*@RequestBody ShoppingCartRequest request*/) {
+        //List<ShoppingCartItem> initialItems = Optional.ofNullable(request.getShoppingCartItems()).orElse(Collections.emptyList());
+        ShoppingCart shoppingCart = shoppingCartService.createShoppingCart();
         URI uri = appContext.getBaseUriBuilder()
                 .pathSegment("shoppingCarts", "{id}")
                 .buildAndExpand(shoppingCart.getId())

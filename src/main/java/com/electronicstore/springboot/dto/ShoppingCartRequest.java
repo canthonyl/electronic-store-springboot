@@ -12,6 +12,7 @@ public class ShoppingCartRequest {
     public enum ResponseType { Auto, ShoppingCart, None }
 
     private ResponseType responseType;
+
     private List<ShoppingCartItem> shoppingCartItems;
 
     public ShoppingCartRequest() {

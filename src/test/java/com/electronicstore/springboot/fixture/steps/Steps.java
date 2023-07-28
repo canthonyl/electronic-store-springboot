@@ -1,10 +1,7 @@
 package com.electronicstore.springboot.fixture.steps;
 
 import com.electronicstore.springboot.context.CommonContext;
-import com.electronicstore.springboot.dao.DiscountRuleRepository;
-import com.electronicstore.springboot.dao.DiscountRuleSettingRepository;
-import com.electronicstore.springboot.dao.ProductCategoryRepository;
-import com.electronicstore.springboot.dao.ProductRepository;
+import com.electronicstore.springboot.dao.*;
 import com.electronicstore.springboot.dto.ProductRequest;
 import com.electronicstore.springboot.fixture.ScenarioContext;
 import com.electronicstore.springboot.model.*;
@@ -19,6 +16,7 @@ import io.cucumber.java.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 
 import static java.util.stream.Collectors.toMap;
 import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
@@ -42,6 +40,9 @@ public class Steps {
 
     @Autowired
     ProductRepository productRepository;
+
+    @Autowired
+    ShoppingCartItemRepository shoppingCartItemRepository;
 
     @Autowired
     DataSource dataSource;
@@ -210,19 +211,31 @@ public class Steps {
     @Given("an empty shopping cart with id {int} is created")
     @When("a new cart is created with id {int}")
     public void aNewCartIsCreated(long cartId) {
-        ShoppingCart cart = shoppingCartService.createShoppingCart(Collections.emptyList());
+        ShoppingCart cart = shoppingCartService.createShoppingCart();
         assertEquals(cartId, cart.getId().longValue());
         scenarioContext.shoppingCarts.put(cart.getId(), cart);
     }
 
     @Given("a shopping cart with id {int} is created with the following items")
+    public void aNewCartIsCreatedWithItems(long cartId, List<ShoppingCartItem> items) {
+        ShoppingCart cart = shoppingCartService.createShoppingCart();
+        assertEquals(cartId, cart.getId().longValue());
+        /*shoppingCartService.addShoppingCartItems(cartId, initialItems);
+        cart = shoppingCartService.getShoppingCart(cart.getId()).get();
+        assertEquals(initialItems.size(), shoppingCartItemRepository.findAll().size());*/
+        shoppingCartService.addShoppingCartItems(cartId, items);
+        cart = shoppingCartService.getShoppingCart(cartId).get();
+        scenarioContext.shoppingCarts.put(cart.getId(), cart);
+    }
+
+    /*@Given("a shopping cart with id {int} is created with the following items")
     public void aNewCartIsCreatedWithItems(long cartId, List<ShoppingCartItem> initialItems) {
         ShoppingCart cart = shoppingCartService.createShoppingCart(Collections.emptyList());
         assertEquals(cartId, cart.getId().longValue());
         shoppingCartService.addShoppingCartItems(cartId, initialItems);
         cart = shoppingCartService.getShoppingCart(cart.getId()).get();
         scenarioContext.shoppingCarts.put(cart.getId(), cart);
-    }
+    }*/
 
     @When("the following items are added to the shopping cart id {int}")
     public void productIsAddedToShoppingCartId(long cartId, List<ShoppingCartItem> items) {

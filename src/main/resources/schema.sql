@@ -36,15 +36,6 @@ create table shopping_cart (
      id bigint primary key
 );
 
-
---create table shopping_cart_item (
---     id bigint not null,
---     cart_id bigint not null,
---     product_id bigint not null,
---     primary key(id, cart_id),
---     foreign key(product_id) references product(id)
---);
-
 create table shopping_cart_item (
      id bigint primary key,
      shopping_cart_id bigint not null,

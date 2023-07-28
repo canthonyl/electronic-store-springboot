@@ -12,7 +12,10 @@ import javax.persistence.OneToMany;
 import javax.persistence.SequenceGenerator;*/
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.*;
 
 @Entity
 public class ShoppingCart {
@@ -27,9 +30,8 @@ public class ShoppingCart {
     //@JoinColumn(name="shoppingCartId", referencedColumnName="id")
 
     //bi-directional
-    @OneToMany(mappedBy="shoppingCart", fetch=FetchType.EAGER)
+    @OneToMany(mappedBy="shoppingCart", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
     private List<ShoppingCartItem> items;
-
 
     private double totalAmountBeforeDiscount;
 
@@ -66,6 +68,7 @@ public class ShoppingCart {
 
     public Map<Long, List<ShoppingCartItem>> getItemsByProduct() {
         return itemsByProduct;
+        //return items.stream().collect(groupingBy(i -> i.getProduct().getId(), mapping(Function.identity(), toList())));
     }
 
     public void setItems(List<ShoppingCartItem> items) {
