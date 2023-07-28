@@ -11,11 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
-import static com.electronicstore.springboot.dto.ShoppingCartRequest.ResponseType.*;
+import static com.electronicstore.springboot.dto.ShoppingCartRequest.ResponseType.ShoppingCart;
 
 @RestController
 @RequestMapping("/shoppingCarts")

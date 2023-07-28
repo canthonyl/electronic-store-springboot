@@ -1,7 +1,6 @@
 package com.electronicstore.springboot.dao;
 
 import com.electronicstore.springboot.model.DiscountRule;
-import com.electronicstore.springboot.model.DiscountRuleSetting;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Repository;
@@ -18,7 +17,7 @@ public interface DiscountRuleRepository
     @Override
     Optional<DiscountRule> findById(Long id);
 
-    @Override //TODO: return map
+    @Override
     List<DiscountRule> findAllById(Iterable<Long> id);
 
     @Override

@@ -1,12 +1,12 @@
 package com.electronicstore.springboot.dto;
 
+import com.electronicstore.springboot.model.Product;
+
 import java.util.*;
 import java.util.function.Function;
-import com.electronicstore.springboot.model.*;
 
-import static com.electronicstore.springboot.model.DiscountRuleSetting.Group;
 import static com.electronicstore.springboot.model.DiscountRule.ThresholdType;
-import static java.util.stream.Collectors.summingDouble;
+import static com.electronicstore.springboot.model.DiscountRuleSetting.Group;
 import static java.util.stream.Collectors.toMap;
 
 public class DealMatchRequest {

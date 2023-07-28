@@ -3,7 +3,6 @@ package com.electronicstore.springboot.dao;
 import com.electronicstore.springboot.model.DiscountRuleSetting;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
-import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;

@@ -1,6 +1,5 @@
 package com.electronicstore.springboot.dto;
 
-import com.electronicstore.springboot.model.ShoppingCart;
 import com.electronicstore.springboot.model.ShoppingCartItem;
 
 import java.util.List;

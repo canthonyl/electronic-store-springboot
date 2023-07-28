@@ -1,5 +1,6 @@
 package com.electronicstore.springboot.model;
 
+
 import jakarta.persistence.*;
 
 @Entity
