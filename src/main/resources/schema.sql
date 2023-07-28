@@ -17,10 +17,10 @@ create sequence shopping_cart_id_seq as bigint;
 create sequence discount_rule_id_seq as bigint;
 create sequence discount_rule_setting_id_seq as bigint;
 
-
 create table product_category (
-     id bigint primary key,
-     name varchar(255) not null
+     id identity not null primary key,
+     name varchar(255) not null,
+     description varchar(255)
 );
 
 create table product (
@@ -62,7 +62,6 @@ create table discount_rule(
     rule_group_id bigint
 );
 
-
 create table discount_rule_setting(
     id bigint primary key,
     rule_id bigint not null,
@@ -71,3 +70,8 @@ create table discount_rule_setting(
     setting_json json(10000) not null,
     foreign key(rule_id) references discount_rule(id)
 );
+
+
+insert into product_category(name) values ('Desktop');
+insert into product_category(name) values ('Laptop');
+insert into product_category(name) values ('Peripheral');

@@ -7,9 +7,9 @@ import org.springframework.test.context.ActiveProfiles;
 
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-@CucumberContextConfiguration
 @ActiveProfiles("test")
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@CucumberContextConfiguration()
 public class CucumberSpringConfiguration {
 }

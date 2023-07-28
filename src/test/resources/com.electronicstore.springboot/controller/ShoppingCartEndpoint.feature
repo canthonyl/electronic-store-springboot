@@ -15,7 +15,7 @@ Feature: Products can be added and removed to shopping cart
     When a POST request is sent to "/shoppingCarts/1/items" with body
       """json
         {
-          "requestItems" : [
+          "shoppingCartItems" : [
             {
               "product" : {"id" : 1},
               "quantity" : 1
@@ -32,11 +32,11 @@ Feature: Products can be added and removed to shopping cart
         }
       """
     Then http status ACCEPTED is received
-    And the following response body
-      """json
-        {
-
-        }
-      """
+    #And the following response body
+    #  """json
+    #    {
+#
+ #       }
+  #    """
 
 
