@@ -27,8 +27,8 @@ public class ShoppingCart {
     //@JoinColumn(name="shoppingCartId", referencedColumnName="id")
 
     //bi-directional
-    @OneToMany(mappedBy="shoppingCart", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
-    private Set<ShoppingCartItem> items;
+    @OneToMany(mappedBy="shoppingCart", fetch=FetchType.EAGER)
+    private List<ShoppingCartItem> items;
 
 
     private double totalAmountBeforeDiscount;
@@ -42,7 +42,7 @@ public class ShoppingCart {
     //private transient List<DiscountRule> dealsApplied;
 
     public ShoppingCart() {
-        items = new HashSet<>();
+        items = new LinkedList<>();
         itemsByProduct = new HashMap<>();
         //dealsApplied = new LinkedList<>();
     }
@@ -60,7 +60,7 @@ public class ShoppingCart {
         this.id = id;
     }
 
-    public Set<ShoppingCartItem> getItems() {
+    public List<ShoppingCartItem> getItems() {
         return items;
     }
 
@@ -68,7 +68,7 @@ public class ShoppingCart {
         return itemsByProduct;
     }
 
-    public void setItems(Set<ShoppingCartItem> items) {
+    public void setItems(List<ShoppingCartItem> items) {
         this.items = items;
         this.itemsByProduct = items.stream().collect(Collectors.groupingBy(i -> i.getProduct().getId(),
                 Collectors.toList()));

@@ -123,12 +123,13 @@ public class ShoppingCartService {
     }
 
     public ShoppingCart createShoppingCart(List<ShoppingCartItem> items) {
-        ShoppingCart shoppingCart = new ShoppingCart();
+        ShoppingCart createdShoppingCart = shoppingCartRepository.save(new ShoppingCart());
         if (items.size() > 0) {
-            shoppingCart.setItems(items.stream().collect(Collectors.toSet()));
-            refreshShoppingCart(shoppingCart);
+            shoppingCartItemRepository.saveAll(items);
+            Long id = createdShoppingCart.getId();
+            createdShoppingCart = shoppingCartRepository.findById(id).get();
         }
-        return shoppingCartRepository.save(shoppingCart);
+        return createdShoppingCart;
     }
 
     public Optional<ShoppingCartItem> getShoppingCartItem(Long cartId, Long itemId) {

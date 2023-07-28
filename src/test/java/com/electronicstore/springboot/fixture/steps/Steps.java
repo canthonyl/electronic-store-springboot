@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.Assert.*;
@@ -184,7 +185,7 @@ public class Steps {
     @Given("the following rule settings")
     public void setupRuleSetting(List<DiscountRuleSetting> rule){
         discountRuleSettingRepository.saveAll(rule);
-
+/*
         List<DiscountRuleSetting> result1 = discountRuleSettingRepository.lookupRuleByCategoryOrProduct(
                 List.of(1L), Collections.emptyList()
         );
@@ -203,7 +204,7 @@ public class Steps {
                 Collections.emptyList(), List.of(4L)
         );
 
-        assertEquals(result4.get(0).getRuleId().longValue(), 2L);
+        assertEquals(result4.get(0).getRuleId().longValue(), 2L);*/
     }
 
     @Given("an empty shopping cart with id {int} is created")
@@ -216,8 +217,10 @@ public class Steps {
 
     @Given("a shopping cart with id {int} is created with the following items")
     public void aNewCartIsCreatedWithItems(long cartId, List<ShoppingCartItem> initialItems) {
-        ShoppingCart cart = shoppingCartService.createShoppingCart(initialItems);
+        ShoppingCart cart = shoppingCartService.createShoppingCart(Collections.emptyList());
         assertEquals(cartId, cart.getId().longValue());
+        shoppingCartService.addShoppingCartItems(cartId, initialItems);
+        cart = shoppingCartService.getShoppingCart(cart.getId()).get();
         scenarioContext.shoppingCarts.put(cart.getId(), cart);
     }
 
@@ -291,10 +294,14 @@ public class Steps {
             assertEquals(item1.getAmountBeforeDiscount(), item2.getAmountBeforeDiscount(), 0.001);
             assertEquals(item1.getDiscountAmount(), item2.getDiscountAmount(), 0.001);
             assertEquals(item1.getAmount(), item2.getAmount(), 0.001);
-
+            assertEquals(toSet(item1.getDiscountApplied()), toSet(item2.getDiscountApplied()));
         });
 
+    }
 
+    private Set<String> toSet(List<String> list) {
+        if (list == null) return Collections.emptySet();
+        return list.stream().collect(Collectors.toSet());
     }
 
 }

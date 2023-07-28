@@ -70,7 +70,7 @@ public class ShoppingCartControllerTest {
                     "{\"product\":{\"id\":"+10+"}}"
                     +"]}";
 
-        shoppingCartWithOneItem.setItems(Set.of(oneItem));
+        shoppingCartWithOneItem.setItems(List.of(oneItem));
         when(shoppingCartService.createShoppingCart(anyList())).thenReturn(shoppingCartWithOneItem);
 
         String productUri = appContext.getBaseUriBuilder().path("shoppingCarts").toUriString();
@@ -97,7 +97,7 @@ public class ShoppingCartControllerTest {
 
     //@Test
     public void testGetShoppingCart(){
-        shoppingCartWithOneItem.setItems(Set.of(oneItem));
+        shoppingCartWithOneItem.setItems(List.of(oneItem));
         when(shoppingCartService.getShoppingCart(2L)).thenReturn(Optional.of(shoppingCartWithOneItem));
 
         String productUri = appContext.getBaseUriBuilder().pathSegment("shoppingCarts","{id}").buildAndExpand(2).toUriString();

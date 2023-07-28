@@ -96,19 +96,25 @@ public class ParameterTypes {
         e.setShoppingCart(shoppingCart);
 
         Optional.ofNullable(map.get("id")).map(Long::valueOf).ifPresent(e::setId);
-        Optional.ofNullable(map.get("cartItemId")).map(Long::valueOf).ifPresent(shoppingCart::setId);
+        Optional.ofNullable(map.get("cartId")).map(Long::valueOf).ifPresent(shoppingCart::setId);
         Optional.ofNullable(map.get("productId")).map(Long::valueOf).ifPresent(product::setId);
         Optional.ofNullable(map.get("quantity")).map(Integer::valueOf).ifPresent(e::setQuantity);
         Optional.ofNullable(map.get("price")).map(Double::valueOf).ifPresent(e::setPrice);
         Optional.ofNullable(map.get("amountBeforeDiscount")).map(Double::valueOf).ifPresent(e::setAmountBeforeDiscount);
         Optional.ofNullable(map.get("discountAmount")).map(Double::valueOf).ifPresent(e::setDiscountAmount);
         Optional.ofNullable(map.get("amount")).map(Double::valueOf).ifPresent(e::setAmount);
+        Optional.ofNullable(map.get("discountApplied")).map(this::toList).ifPresent(e::setDiscountApplied);
 
         return e;
     }
 
     private Set<Long> toLongSet(String s) {
         return Arrays.stream(s.trim().split(",",-1)).map(Long::valueOf).collect(Collectors.toSet());
+    }
+
+    private List<String> toList(String s) {
+        String[] array = s.trim().split(",",-1);
+        return Arrays.stream(array).map(String::trim).toList();
     }
 
     /*public static String toCamelCase(String s) {
