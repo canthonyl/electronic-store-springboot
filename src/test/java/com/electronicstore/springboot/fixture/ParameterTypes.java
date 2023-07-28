@@ -66,20 +66,11 @@ public class ParameterTypes {
         Map<String, String> map = new HashMap<>();
         entry.forEach((k,v) -> map.put(toCamelCase(k), v));
 
-        /*DiscountRuleSetting.Definition definition = new DiscountRuleSetting.Definition();
-        definition.categoryList = Optional.ofNullable(map.get("category")).map(this::toLongSet).orElse(Collections.emptySet());
-        definition.productList = Optional.ofNullable(map.get("product")).map(this::toLongSet).orElse(Collections.emptySet());
-        */
-
         DiscountRuleSetting p = new DiscountRuleSetting();
         Optional.ofNullable(map.get("id")).map(Long::valueOf).ifPresent(p::setId);
-        Optional.ofNullable(map.get("ruleId")).map(Long::valueOf).ifPresent(p::setRuleId);
+        Optional.ofNullable(map.get("ruleGroupId")).map(Long::valueOf).ifPresent(p::setRuleGroupId);
         Optional.ofNullable(map.get("categoryId")).map(Long::valueOf).ifPresent(p::setCategoryId);
         Optional.ofNullable(map.get("productId")).map(Long::valueOf).ifPresent(p::setProductId);
-        Optional.ofNullable(map.get("ruleGroupId")).map(Long::valueOf).ifPresent(p::setRuleGroupId);
-
-        /*p.setDefinition(definition);
-        p.setSettingJson(gson.toJson(definition));*/
 
         return p;
     }

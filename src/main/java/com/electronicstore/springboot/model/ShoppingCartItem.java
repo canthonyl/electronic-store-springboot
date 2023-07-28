@@ -36,8 +36,6 @@ public class ShoppingCartItem {
 
     private double amount;
 
-    private String productOptions;
-
     private transient List<String> discountApplied;
 
     //private Map<String, String> attributes;
@@ -127,14 +125,6 @@ public class ShoppingCartItem {
 
     public void setAmount(double amount) {
         this.amount = amount;
-    }
-
-    public String getProductOptions() {
-        return productOptions;
-    }
-
-    public void setProductOptions(String productOptions) {
-        this.productOptions = productOptions;
     }
 
     public List<String> getDiscountApplied() {

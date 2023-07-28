@@ -27,4 +27,5 @@ public class ProductCategory {
     public void setName(String name) {
         this.name = name;
     }
+
 }

@@ -17,15 +17,13 @@ public class DiscountRuleSetting {
     @SequenceGenerator(name = "discount_rule_setting_id_seq", sequenceName = "discount_rule_setting_id_seq", allocationSize = 1)
     private Long id;
 
-    private Long ruleId;
-
     private Long categoryId;
 
     private Long productId;
 
     private Long ruleGroupId;
 
-    private String settingJson;
+    private String setting;
 
     public static class Definition {
         public Set<Long> categoryList;
@@ -42,20 +40,12 @@ public class DiscountRuleSetting {
         this.id = id;
     }
 
-    public Long getRuleId() {
-        return ruleId;
+    public String getSetting() {
+        return setting;
     }
 
-    public void setRuleId(Long ruleId) {
-        this.ruleId = ruleId;
-    }
-
-    public String getSettingJson() {
-        return settingJson;
-    }
-
-    public void setSettingJson(String settingJson) {
-        this.settingJson = settingJson;
+    public void setSetting(String setting) {
+        this.setting = setting;
     }
 
     public Definition getDefinition() {

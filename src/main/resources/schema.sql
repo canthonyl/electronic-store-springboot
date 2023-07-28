@@ -1,6 +1,7 @@
 drop sequence if exists product_category_id_seq;
 drop sequence if exists product_id_seq;
 drop sequence if exists shopping_cart_id_seq;
+drop sequence if exists shopping_cart_item_id_seq;
 drop sequence if exists discount_rule_id_seq;
 drop sequence if exists discount_rule_setting_id_seq;
 
@@ -14,13 +15,13 @@ drop table if exists discount_rule;
 create sequence product_category_id_seq as bigint;
 create sequence product_id_seq as bigint;
 create sequence shopping_cart_id_seq as bigint;
+create sequence shopping_cart_item_id_seq as bigint;
 create sequence discount_rule_id_seq as bigint;
 create sequence discount_rule_setting_id_seq as bigint;
 
 create table product_category (
-     id identity not null primary key,
-     name varchar(255) not null,
-     description varchar(255)
+     id bigint primary key,
+     name varchar(255) not null
 );
 
 create table product (
@@ -45,7 +46,6 @@ create table shopping_cart_item (
      amount_before_discount numeric(20, 2),
      discount_amount numeric(20, 2),
      amount numeric(20, 2),
-     options json(10000),
      foreign key(shopping_cart_id) references shopping_cart(id),
      foreign key(product_id) references product(id)
 );
@@ -57,21 +57,16 @@ create table discount_rule(
     applicable_unit bigint,
     applicable_unit_type enum('Qty','Amount') not null,
     applicable_discount numeric(20, 2),
-    overrideAmount numeric(20, 2),
+    override_amount numeric(20, 2),
     description varchar(255),
     rule_group_id bigint
 );
 
 create table discount_rule_setting(
     id bigint primary key,
-    rule_id bigint not null,
+    rule_group_id bigint not null,
     category_id bigint,
     product_id bigint,
-    setting_json json(10000) not null,
-    foreign key(rule_id) references discount_rule(id)
+    setting json(10000)
 );
 
-
-insert into product_category(name) values ('Desktop');
-insert into product_category(name) values ('Laptop');
-insert into product_category(name) values ('Peripheral');

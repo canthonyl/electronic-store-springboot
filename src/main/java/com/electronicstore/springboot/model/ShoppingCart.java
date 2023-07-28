@@ -33,11 +33,11 @@ public class ShoppingCart {
     @OneToMany(mappedBy="shoppingCart", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
     private List<ShoppingCartItem> items;
 
-    private double totalAmountBeforeDiscount;
+    private transient double totalAmountBeforeDiscount;
 
-    private double totalDiscountAmount;
+    private transient double totalDiscountAmount;
 
-    private double totalAmount;
+    private transient double totalAmount;
 
     private transient Map<Long, List<ShoppingCartItem>> itemsByProduct;
 
