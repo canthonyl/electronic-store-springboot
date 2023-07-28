@@ -1,33 +1,38 @@
 package com.electronicstore.springboot.controller;
 
 import com.electronicstore.springboot.context.CommonContext;
+import com.electronicstore.springboot.dto.ProductRequest;
+import com.electronicstore.springboot.fixture.Examples;
 import com.electronicstore.springboot.model.Product;
 import com.electronicstore.springboot.service.ProductService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.*;
 
+import static com.electronicstore.springboot.fixture.Examples.*;
 import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.javacrumbs.jsonunit.JsonMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 
-//@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-//@Profile("test")
-//@ActiveProfiles("test")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class ProductControllerTest {
 
     @Autowired
@@ -39,19 +44,13 @@ public class ProductControllerTest {
     @MockBean
     private ProductService productService;
 
-
-    Product createdProduct1 = new Product(1L,"Apple Macbook Pro", "Apple Macbook Pro");
-    Product createdProduct2 = new Product(2L,"Dell Desktop", "Dell Desktop");
-    Product createdProduct3 = new Product(3L, "Mechanical Keyboard", "Mechanical Keyboard");
-    List<Product> createdProductList = List.of(createdProduct1, createdProduct2, createdProduct3);
-
     private Gson gson = new Gson();
 
-    //@Test
+    @Test
     public void testGetProduct(){
-        when(productService.getProduct(1L)).thenReturn(Optional.of(createdProduct1));
-        when(productService.getProduct(2L)).thenReturn(Optional.of(createdProduct2));
-        when(productService.getProduct(3L)).thenReturn(Optional.of(createdProduct3));
+        when(productService.getProduct(1L)).thenReturn(Optional.of(product1));
+        when(productService.getProduct(2L)).thenReturn(Optional.of(product2));
+        when(productService.getProduct(3L)).thenReturn(Optional.of(product3));
         when(productService.getProduct(4L)).thenReturn(Optional.empty());
 
         UriComponentsBuilder uri = appContext.getBaseUriBuilder().pathSegment("products","{id}");
@@ -67,63 +66,86 @@ public class ProductControllerTest {
         assertEquals(HttpStatus.NOT_FOUND.value(), notFoundResponse4.getStatusCode().value());
 
         String json1 = response1.getBody();
-        assertThat(json1, jsonPartEquals("id", createdProduct1.getId()));
-        assertThat(json1, jsonPartEquals("name", createdProduct1.getName()));
-        assertThat(json1, jsonPartEquals("description", createdProduct1.getDescription()));
+        assertThat(json1, jsonPartEquals("id", product1.getId()));
+        assertThat(json1, jsonPartEquals("name", product1.getName()));
+        assertThat(json1, jsonPartEquals("description", product1.getDescription()));
+        assertThat(json1, jsonPartEquals("price", product1.getPrice()));
+        assertThat(json1, jsonPartEquals("categoryId", product1.getCategoryId()));
 
         String json2 = response2.getBody();
-        assertThat(json2, jsonPartEquals("id", createdProduct2.getId()));
-        assertThat(json2, jsonPartEquals("name", createdProduct2.getName()));
-        assertThat(json2, jsonPartEquals("description", createdProduct2.getDescription()));
+        assertThat(json2, jsonPartEquals("id", product2.getId()));
+        assertThat(json2, jsonPartEquals("name", product2.getName()));
+        assertThat(json2, jsonPartEquals("description", product2.getDescription()));
+        assertThat(json2, jsonPartEquals("price", product2.getPrice()));
+        assertThat(json2, jsonPartEquals("categoryId", product2.getCategoryId()));
 
         String json3 = response3.getBody();
-        assertThat(json3, jsonPartEquals("id", createdProduct3.getId()));
-        assertThat(json3, jsonPartEquals("name", createdProduct3.getName()));
-        assertThat(json3, jsonPartEquals("description", createdProduct3.getDescription()));
+        assertThat(json3, jsonPartEquals("id", product3.getId()));
+        assertThat(json3, jsonPartEquals("name", product3.getName()));
+        assertThat(json3, jsonPartEquals("description", product3.getDescription()));
+        assertThat(json3, jsonPartEquals("price", product3.getPrice()));
+        assertThat(json3, jsonPartEquals("categoryId", product3.getCategoryId()));
     }
 
 
-    //@Test
+    @Test
     public void testAddProduct(){
-        String requestJson = "{ \"list\" : ["+
-                "{\"name\":\"Apple Laptop\",\"description\":\"Apple Macbook Pro\"}" +
-                ",{\"name\":\"Dell Desktop\",\"description\":\"Dell Inspire Series\"}" +
-                ",{\"name\":\"Mechanical Keyboard\",\"description\":\"Mech Keyboard Pro\"}" +
-                "]}";
+        ProductRequest request = new ProductRequest(Arrays.asList(
+                Examples.ofProduct("Apple Macbook Pro", "Apple Macbook Pro", 11000, 2L),
+                Examples.ofProduct("Dell Desktop", "Dell Desktop", 5000, 1L),
+                Examples.ofProduct("Mechanical Keyboard", "Mechanical Keyboard", 678, 3L)
+        ));
 
-        when(productService.addProducts(anyList())).thenReturn(createdProductList);
+        UriComponentsBuilder uri = appContext.getBaseUriBuilder().pathSegment("products","{id}");
+        List<String> list = Arrays.asList(
+                uri.build(1).toString(),
+                uri.build(2).toString(),
+                uri.build(3).toString()
+        );
 
-        System.out.println(requestJson);
+        when(productService.addProducts(anyList())).thenReturn(productList);
 
+        String json = gson.toJson(request);
         String productUri = appContext.getBaseUriBuilder().path("products").toUriString();
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-        headers.add("content-type","application/json");
-        HttpEntity<String> requestEntity = new HttpEntity<>(requestJson, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(productUri, HttpMethod.POST, requestEntity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(productUri, HttpMethod.POST, jsonRequest(json), String.class);
 
-        assertEquals(HttpStatus.ACCEPTED.value(), response.getStatusCode().value());
         String responseJson = response.getBody();
-        System.out.println(responseJson);
-        assertThat(responseJson , jsonNodePresent("products[0].product"));
-        assertThat(responseJson , jsonNodePresent("products[1].product"));
-        assertThat(responseJson , jsonNodePresent("products[2].product"));
+        assertEquals(HttpStatus.ACCEPTED.value(), response.getStatusCode().value());
+        assertTrue(response.getHeaders().containsKey(HttpHeaders.LOCATION));
+        List<String> resultList = response.getHeaders().get(HttpHeaders.LOCATION);
+        assertEquals(list, resultList);
 
-        assertThat(responseJson , jsonPartEquals("products[0].product.name", createdProduct1.getName()));
-        assertThat(responseJson , jsonPartEquals("products[1].product.name", createdProduct2.getName()));
-        assertThat(responseJson , jsonPartEquals("products[2].product.name", createdProduct3.getName()));
+        assertThat(responseJson , jsonNodePresent("products[0]"));
+        assertThat(responseJson , jsonNodePresent("products[1]"));
+        assertThat(responseJson , jsonNodePresent("products[2]"));
 
-        assertThat(responseJson , jsonNodePresent("products[0].attributes"));
-        assertThat(responseJson , jsonNodePresent("products[1].attributes"));
-        assertThat(responseJson , jsonNodePresent("products[2].attributes"));
+        assertThat(responseJson , jsonPartEquals("products[0].id", product1.getId()));
+        assertThat(responseJson , jsonPartEquals("products[1].id", product2.getId()));
+        assertThat(responseJson , jsonPartEquals("products[2].id", product3.getId()));
 
-        String uri = "http://localhost:"+appContext.serverPort()+"/products/";
-        assertThat(responseJson , jsonPartEquals("products[0].attributes.resource", uri+createdProduct1.getId()));
-        assertThat(responseJson , jsonPartEquals("products[1].attributes.resource", uri+createdProduct2.getId()));
-        assertThat(responseJson , jsonPartEquals("products[2].attributes.resource", uri+createdProduct3.getId()));
+        assertThat(responseJson , jsonPartEquals("products[0].name", product1.getName()));
+        assertThat(responseJson , jsonPartEquals("products[1].name", product2.getName()));
+        assertThat(responseJson , jsonPartEquals("products[2].name", product3.getName()));
 
-        /*assertThat(responseJson, jsonPartEquals("list[0].id",1));
-        assertThat(responseJson, jsonPartEquals("list[0].name","Apple Laptop"));*/
+        assertThat(responseJson , jsonPartEquals("products[0].description", product1.getDescription()));
+        assertThat(responseJson , jsonPartEquals("products[1].description", product2.getDescription()));
+        assertThat(responseJson , jsonPartEquals("products[2].description", product3.getDescription()));
+
+        assertThat(responseJson , jsonPartEquals("products[0].price", product1.getPrice()));
+        assertThat(responseJson , jsonPartEquals("products[1].price", product2.getPrice()));
+        assertThat(responseJson , jsonPartEquals("products[2].price", product3.getPrice()));
+
+        assertThat(responseJson , jsonPartEquals("products[0].categoryId", product1.getCategoryId()));
+        assertThat(responseJson , jsonPartEquals("products[1].categoryId", product2.getCategoryId()));
+        assertThat(responseJson , jsonPartEquals("products[2].categoryId", product3.getCategoryId()));
+    }
+
+    private HttpEntity<String> jsonRequest(String requestJson) {
+        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestJson, headers);
+        return requestEntity;
     }
 
 }

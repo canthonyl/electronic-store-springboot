@@ -54,7 +54,7 @@ public class ShoppingCartService {
         return dealService.matchDeals(request);
     }
 
-    private void refreshShoppingCart(ShoppingCart cart) {
+    public void refreshShoppingCart(ShoppingCart cart) {
         Map<Long, Product> products = productRepository.findAllById(cart.getItems().stream().map(i -> i.getProduct().getId()).toList())
                 .stream().collect(toMap(Product::getId, Function.identity()));
 

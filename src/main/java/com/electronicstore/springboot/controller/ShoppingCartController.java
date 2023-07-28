@@ -91,7 +91,7 @@ public class ShoppingCartController {
                 .get();
     }*/
 
-    @PutMapping("{cartId}/items/{itemId}")
+    /*@PutMapping("{cartId}/items/{itemId}")
     public ResponseEntity<ShoppingCartResponse> updateShoppingCartItem(@PathVariable(name="cartId") Long cartId, @PathVariable(name="itemId") Long itemId, @RequestBody ShoppingCartRequest request) {
         if (!shoppingCartService.shoppingCartItemExists(cartId, itemId)) {
             return ResponseEntity.notFound().build();
@@ -102,7 +102,7 @@ public class ShoppingCartController {
         } else {
             return ResponseEntity.accepted().build();
         }
-    }
+    }*/
 
 
 }

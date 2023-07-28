@@ -2,31 +2,32 @@ package com.electronicstore.springboot.controller;
 
 
 import com.electronicstore.springboot.context.CommonContext;
-import com.electronicstore.springboot.model.Product;
-import com.electronicstore.springboot.model.ShoppingCart;
-import com.electronicstore.springboot.model.ShoppingCartItem;
+import com.electronicstore.springboot.dto.ShoppingCartRequest;
 import com.electronicstore.springboot.service.ShoppingCartService;
+import com.google.gson.Gson;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
+import static com.electronicstore.springboot.fixture.Examples.*;
 import static net.javacrumbs.jsonunit.JsonMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyList;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpHeaders.*;
 
-//@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-//@Profile("test")
-//@ActiveProfiles("test")
+import com.electronicstore.springboot.model.*;
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class ShoppingCartControllerTest {
 
     @Autowired
@@ -38,47 +39,112 @@ public class ShoppingCartControllerTest {
     @MockBean
     private ShoppingCartService shoppingCartService;
 
-    ShoppingCart shoppingCartWithZeroItem = new ShoppingCart(1L);
-    ShoppingCart shoppingCartWithOneItem = new ShoppingCart(2L);
-    Product appleMacbookPro = new Product(10L, "Apple MacbookPro", "Apple Macbook Pro");
-    ShoppingCartItem oneItem = new ShoppingCartItem(shoppingCartWithOneItem,3L, appleMacbookPro);
+    private Gson gson = new Gson();
 
-    //@Test
+    @Test
     public void testNewShoppingCart(){
-        String requestJson = "{\"items\": []}";
-
-        when(shoppingCartService.createShoppingCart()).thenReturn(shoppingCartWithZeroItem);
+        when(shoppingCartService.createShoppingCart()).thenReturn(shoppingCart1);
 
         String productUri = appContext.getBaseUriBuilder().path("shoppingCarts").toUriString();
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-        headers.add("content-type","application/json");
-        HttpEntity<String> requestEntity = new HttpEntity<>(requestJson, headers);
-
-        ResponseEntity<String> response = restTemplate.exchange(productUri, HttpMethod.POST, requestEntity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(productUri, HttpMethod.POST, null, String.class);
 
         assertEquals(HttpStatus.CREATED.value(), response.getStatusCode().value());
         String responseJson = response.getBody();
 
-        assertThat(responseJson, jsonNodePresent("id"));
-        assertThat(responseJson, jsonNodePresent("items"));
-        assertThat(responseJson, jsonPartEquals("id", 1));
+        assertThat(responseJson, jsonNodePresent("shoppingCart"));
+        assertThat(responseJson, jsonPartEquals("shoppingCart.id", 1));
     }
 
-
-
-    //@Test
+    @Test
     public void testGetShoppingCart(){
-        shoppingCartWithOneItem.setItems(List.of(oneItem));
-        when(shoppingCartService.getShoppingCart(2L)).thenReturn(Optional.of(shoppingCartWithOneItem));
+        Long id = shoppingCart2.getId();
+        when(shoppingCartService.getShoppingCart(2L)).thenReturn(Optional.of(shoppingCart2));
+        when(shoppingCartService.getShoppingCart(3L)).thenReturn(Optional.empty());
 
-        String productUri = appContext.getBaseUriBuilder().pathSegment("shoppingCarts","{id}").buildAndExpand(2).toUriString();
-        ResponseEntity<String> response = restTemplate.getForEntity(productUri, String.class);
+        String cart2Url = appContext.getBaseUriBuilder().pathSegment("shoppingCarts","{id}").buildAndExpand(id).toUriString();
+        ResponseEntity<String> cart2Response = restTemplate.getForEntity(cart2Url, String.class);
 
-        String responseJson = response.getBody();
-        assertThat(responseJson, jsonNodePresent("id"));
+        assertEquals(HttpStatus.OK.value(), cart2Response.getStatusCode().value());
+
+        String responseJson = cart2Response.getBody();
+        assertThat(responseJson, jsonPartEquals("id", id));
         assertThat(responseJson, jsonNodePresent("items[0]"));
-        assertThat(responseJson, jsonPartEquals("id", 2));
-        assertThat(responseJson, jsonPartEquals("items[0].id", 3));
-        assertThat(responseJson, jsonPartEquals("items[0].product.id", 10));
+        assertThat(responseJson, jsonPartEquals("items[0].id", shoppingCart2.getItems().get(0).getId()));
+        assertThat(responseJson, jsonPartEquals("items[0].product.id", shoppingCart2.getItems().get(0).getProduct().getId()));
+
+        String cart3Url = appContext.getBaseUriBuilder().pathSegment("shoppingCarts","{id}").buildAndExpand(3).toUriString();
+        ResponseEntity<String> product3response = restTemplate.getForEntity(cart3Url, String.class);
+        assertEquals(HttpStatus.NOT_FOUND.value(), product3response.getStatusCode().value());
     }
+
+    @Test
+    public void testGetShoppingCartItem(){
+        when(shoppingCartService.shoppingCartExists(2L)).thenReturn(true);
+        when(shoppingCartService.getShoppingCartItem(2L, 1L)).thenReturn(Optional.of(shoppingCart2.getItems().get(0)));
+        when(shoppingCartService.getShoppingCartItem(2L, 2L)).thenReturn(Optional.empty());
+
+        String cart2Item1Url = appContext.getBaseUriBuilder().pathSegment("shoppingCarts","{cartId}","items","{itemId}")
+                .build(2L, 1L).toString();
+        ResponseEntity<String> cart2Item1Response = restTemplate.getForEntity(cart2Item1Url, String.class);
+        assertEquals(HttpStatus.OK.value(), cart2Item1Response.getStatusCode().value());
+
+        String cart2Item1 = cart2Item1Response.getBody();
+        assertThat(cart2Item1, jsonPartEquals("id", 1L));
+        assertThat(cart2Item1, jsonPartEquals("product.id", 1L));
+        assertThat(cart2Item1, jsonPartEquals("quantity", 1));
+        assertThat(cart2Item1, jsonPartEquals("price", 11000.0));
+        assertThat(cart2Item1, jsonPartEquals("amountBeforeDiscount", 11000.0));
+        assertThat(cart2Item1, jsonPartEquals("discountAmount", 2000.0));
+        assertThat(cart2Item1, jsonPartEquals("amount", 9000.0));
+
+        when(shoppingCartService.getShoppingCartItem(2L, 2L)).thenReturn(Optional.empty());
+
+        String cart2Item2Url = appContext.getBaseUriBuilder().pathSegment("shoppingCarts","{cartId}","items","{itemId}")
+                .build(2L, 2L).toString();
+        ResponseEntity<String> cart2Item2Response = restTemplate.getForEntity(cart2Item2Url, String.class);
+        assertEquals(HttpStatus.NOT_FOUND.value(), cart2Item2Response.getStatusCode().value());
+    }
+
+    @Test
+    public void addItemsToShoppingCart() {
+        when(shoppingCartService.shoppingCartExists(2L)).thenReturn(true);
+        when(shoppingCartService.getShoppingCart(2L)).thenReturn(Optional.of(shoppingCart2));
+
+        String cart2ItemsUrl = appContext.getBaseUriBuilder().pathSegment("shoppingCarts","{cartId}","items")
+                .build(2L).toString();
+
+        ShoppingCartRequest request = new ShoppingCartRequest();
+        request.setResponseType(ShoppingCartRequest.ResponseType.ShoppingCart);
+        request.setShoppingCartItems(shoppingCart2.getItems());
+
+        String json;
+        ResponseEntity<String> cart2Item2Response;
+        String responseJson;
+
+        json = gson.toJson(request);
+        cart2Item2Response =  restTemplate.postForEntity(cart2ItemsUrl, jsonRequest(json), String.class);
+        assertEquals(HttpStatus.ACCEPTED.value(), cart2Item2Response.getStatusCode().value());
+
+        responseJson = cart2Item2Response.getBody();
+        assertThat(responseJson, jsonPartEquals("shoppingCart.id", 2L));
+        assertThat(responseJson, jsonNodePresent("shoppingCart.items[0]"));
+
+        request.setResponseType(ShoppingCartRequest.ResponseType.None);
+
+        json = gson.toJson(request);
+        cart2Item2Response = restTemplate.postForEntity(cart2ItemsUrl, jsonRequest(json), String.class);
+        assertEquals(HttpStatus.ACCEPTED.value(), cart2Item2Response.getStatusCode().value());
+
+        responseJson = cart2Item2Response.getBody();
+        assertNull(responseJson);
+
+    }
+
+    private HttpEntity<String> jsonRequest(String requestJson) {
+        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        HttpEntity<String> requestEntity = new HttpEntity<>(requestJson, headers);
+        return requestEntity;
+    }
+
 }
