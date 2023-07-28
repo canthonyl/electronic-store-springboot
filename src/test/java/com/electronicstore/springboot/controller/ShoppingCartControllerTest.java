@@ -128,6 +128,10 @@ public class ShoppingCartControllerTest {
         responseJson = cart2Item2Response.getBody();
         assertThat(responseJson, jsonPartEquals("shoppingCart.id", 2L));
         assertThat(responseJson, jsonNodePresent("shoppingCart.items[0]"));
+        assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].id", 1L));
+        assertThat(responseJson, jsonNodePresent("shoppingCart.items[0].product"));
+        assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].product.id", 1L));
+        assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].product.price", 11000.0));
 
         request.setResponseType(ShoppingCartRequest.ResponseType.None);
 
