@@ -1,5 +1,8 @@
 package com.electronicstore.springboot.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.util.HashMap;
@@ -9,6 +12,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Entity
+@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="id")
 public class ShoppingCart {
 
     @Id
@@ -21,6 +25,7 @@ public class ShoppingCart {
     //@JoinColumn(name="shoppingCartId", referencedColumnName="id")
 
     //bi-directional
+    //@ElementCollection
     @OneToMany(mappedBy="shoppingCart", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
     private List<ShoppingCartItem> items;
 
@@ -30,6 +35,7 @@ public class ShoppingCart {
 
     private transient double totalAmount;
 
+    @JsonIgnoreProperties
     private transient Map<Long, List<ShoppingCartItem>> itemsByProduct;
 
     //private transient List<DiscountRule> dealsApplied;

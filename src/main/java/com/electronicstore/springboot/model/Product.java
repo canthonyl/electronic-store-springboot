@@ -28,14 +28,19 @@ public class Product {
 
     public Product() {}
 
+    public Product(Long id) {
+        this.id = id;
+    }
+
     public Product(String name, String description) {
         this.name = name;
         this.description = description;
     }
 
     public Product(Long id, String name, String description) {
-        this(name, description);
         this.id = id;
+        this.name = name;
+        this.description = description;
     }
 
     public Long getId() {

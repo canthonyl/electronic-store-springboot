@@ -1,13 +1,17 @@
 package com.electronicstore.springboot.model;
 
 //import javax.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.util.List;
 import java.util.Objects;
 
+//@Embeddable
 @Entity
-//@IdClass(ShoppingCartItemId.class)
+@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="id")
 public class ShoppingCartItem {
 
     @Id
@@ -19,6 +23,7 @@ public class ShoppingCartItem {
     //private Long shoppingCartId;
 
     //bi-directional
+    @JsonIgnoreProperties
     @ManyToOne//(cascade = CascadeType.DETACH)
     @JoinColumn(name="shopping_cart_id", referencedColumnName="id")
     private ShoppingCart shoppingCart;
@@ -38,20 +43,16 @@ public class ShoppingCartItem {
 
     private transient List<String> discountApplied;
 
-    //private Map<String, String> attributes;
+    public ShoppingCartItem() { }
 
-    public ShoppingCartItem() {
-        //attributes = new LinkedHashMap<>();
+    public ShoppingCartItem(Product product, int quantity) {
+        this.product = product;
+        this.quantity = quantity;
     }
 
-    public ShoppingCartItem(ShoppingCart shoppingCart, Long id) {
-        this();
-        this.shoppingCart = shoppingCart;
+    public ShoppingCartItem(Long id, ShoppingCart shoppingCart, Product product) {
         this.id = id;
-    }
-
-    public ShoppingCartItem(ShoppingCart shoppingCart, Long id, Product product) {
-        this(shoppingCart, id);
+        this.shoppingCart = shoppingCart;
         this.product = product;
     }
 
