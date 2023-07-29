@@ -2,19 +2,19 @@
   "list": [
     {
       "name": "iPad Pro",
-      "description": "Apple Macbook Pro",
+      "description": "Apple iPad Pro",
       "price": 8000.0,
       "categoryId": 3
     },
     {
       "name": "Apple Mac Pro",
-      "description": "Apple Desktop",
+      "description": "Apple Desktop - Mac Pro",
       "price": 20000.0,
       "categoryId": 1
     },
     {
       "name": "Macbook Air",
-      "description": "Macbook Air",
+      "description": "Apple Macbook Air",
       "price": 7000.0,
       "categoryId": 2
     }

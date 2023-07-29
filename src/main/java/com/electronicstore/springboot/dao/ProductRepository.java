@@ -1,6 +1,7 @@
 package com.electronicstore.springboot.dao;
 
 import com.electronicstore.springboot.model.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,8 +10,9 @@ import java.util.Optional;
 @Repository
 //@Cacheable
 public interface ProductRepository
-        extends ListCrudRepository<Product, Long> {
-        ////extends JpaRepository<Product, Long> {
+        //extends ListCrudRepository<Product, Long> {
+        //extends BaseRepository<Product, Long> {
+        extends JpaRepository<Product, Long> {
 
     @Override
     Optional<Product> findById(Long id);
