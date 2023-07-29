@@ -11,8 +11,7 @@ import java.util.Optional;
 
 public interface DiscountRuleSettingRepository
         //extends ListCrudRepository<DiscountRuleSetting, Long> {
-        extends JpaRepository<DiscountRuleSetting, Long>
-        //extends BaseRepository<DiscountRuleSetting, Long>
+        extends JpaRepository<DiscountRuleSetting, Long>, BaseRepository<DiscountRuleSetting, Long>
     {
 
     @Override

@@ -24,6 +24,7 @@ public class Product {
 
     private Double price;
 
+    @Column(name="category_id")
     private Long categoryId;
 
     public Product() {}
@@ -37,10 +38,19 @@ public class Product {
         this.description = description;
     }
 
-    public Product(Long id, String name, String description) {
+    public Product(Long id, String name, String description, double price, Long categoryId) {
         this.id = id;
         this.name = name;
         this.description = description;
+        this.price = price;
+        this.categoryId = categoryId;
+    }
+
+    public Product(String name, String description, double price, Long categoryId) {
+        this.name = name;
+        this.description = description;
+        this.price = price;
+        this.categoryId = categoryId;
     }
 
     public Long getId() {

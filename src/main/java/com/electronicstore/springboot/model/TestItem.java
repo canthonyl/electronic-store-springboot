@@ -1,6 +1,5 @@
 package com.electronicstore.springboot.model;
 
-import jakarta.annotation.Generated;
 import jakarta.persistence.*;
 
 @Embeddable

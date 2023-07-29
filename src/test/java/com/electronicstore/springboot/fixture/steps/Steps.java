@@ -68,9 +68,6 @@ public class Steps {
     @Autowired
     ShoppingCartService shoppingCartService;
 
-
-    Product testProduct = new Product(1L, "Laptop", "macbook pro");
-
     Gson gson = new Gson();
 
     @Before

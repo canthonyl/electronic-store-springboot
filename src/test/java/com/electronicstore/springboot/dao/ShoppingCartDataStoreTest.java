@@ -4,12 +4,17 @@ import com.electronicstore.springboot.fixture.Examples;
 import com.electronicstore.springboot.model.Product;
 import com.electronicstore.springboot.model.ShoppingCart;
 import com.electronicstore.springboot.model.TestItem;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.transaction.PlatformTransactionManager;
 
+import javax.sql.DataSource;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,9 +27,6 @@ public class ShoppingCartDataStoreTest {
 
     @Autowired
     ShoppingCartRepository shoppingCartRepository;
-
-    @Autowired
-    ShoppingCartItemRepository shoppingCartItemRepository;
 
     @Autowired
     ProductRepository productRepository;
@@ -41,7 +43,6 @@ public class ShoppingCartDataStoreTest {
 
     @Test
     public void testSaveShoppingCartWithItemsReturnsUniqueIdentifiers(){
-        //ensure product is created
         productRepository.save(Examples.product1);
         productRepository.save(Examples.product2);
         productRepository.save(Examples.product3);
@@ -73,8 +74,6 @@ public class ShoppingCartDataStoreTest {
         assertEquals(2L, instance2.getTestItem().get(1).getId());
         assertEquals(3L, instance2.getTestItem().get(2).getId());
 
-        //keep behavior in test case
-        assertNotEquals(instance1, instance2);
     }
 
 

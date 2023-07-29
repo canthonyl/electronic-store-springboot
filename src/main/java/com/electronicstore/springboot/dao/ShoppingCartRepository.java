@@ -11,7 +11,7 @@ import java.util.Optional;
 public interface ShoppingCartRepository
         //extends ListCrudRepository<ShoppingCart, Long> {
         //extends BaseRepository<ShoppingCart, Long> {
-        extends JpaRepository<ShoppingCart, Long> {
+        extends JpaRepository<ShoppingCart, Long>, BaseRepository<ShoppingCart, Long> {
 
     @Override
     boolean existsById(Long id);

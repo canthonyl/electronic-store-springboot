@@ -33,11 +33,5 @@ public class ProductService {
         return product;
     }
 
-    @Async
-    public CompletableFuture<List<Product>> addProductsAsync(List<Product> list) {
-        CompletableFuture<List<Product>> result = CompletableFuture.completedFuture(
-                Arrays.asList(new Product(1L, "Laptop", "Macbook Pro")));
-        return result;
-    }
 
 }

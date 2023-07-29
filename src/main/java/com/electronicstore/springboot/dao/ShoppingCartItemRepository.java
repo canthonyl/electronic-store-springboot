@@ -11,8 +11,7 @@ import java.util.Optional;
 @Repository
 public interface ShoppingCartItemRepository
         //extends ListCrudRepository<ShoppingCartItem, Long> {
-        //extends BaseRepository<ShoppingCartItem, Long> {
-        extends JpaRepository<ShoppingCartItem, Long> {
+        extends JpaRepository<ShoppingCartItem, Long>, BaseRepository<ShoppingCartItem, Long> {
 
     @Override
     Optional<ShoppingCartItem> findById(Long id);

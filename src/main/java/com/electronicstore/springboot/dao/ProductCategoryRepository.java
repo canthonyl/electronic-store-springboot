@@ -11,8 +11,7 @@ import java.util.Optional;
 //@Cacheable
 public interface ProductCategoryRepository
         //extends ListCrudRepository<ProductCategory, Long> {
-        //extends BaseRepository<ProductCategory, Long> {
-        extends JpaRepository<ProductCategory, Long> {
+        extends JpaRepository<ProductCategory, Long>, BaseRepository<ProductCategory, Long> {
 
     @Override
     Optional<ProductCategory> findById(Long id);
