@@ -70,3 +70,14 @@ create table discount_rule_setting(
     setting json(10000)
 );
 
+
+create sequence shopping_cart_test_item_id_seq as bigint;
+
+create table shopping_cart_test_item(
+    id bigint default(next value for shopping_cart_test_item_id_seq) default on null,
+    shopping_cart_id bigint,
+    text varchar(1000),
+    foreign key(shopping_cart_id) references shopping_cart(id)
+);
+
+

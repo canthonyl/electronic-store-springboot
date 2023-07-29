@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CollectionId;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -28,6 +29,9 @@ public class ShoppingCart {
     //@ElementCollection
     @OneToMany(mappedBy="shoppingCart", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
     private List<ShoppingCartItem> items;
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<TestItem> testItem;
 
     private transient double totalAmountBeforeDiscount;
 
@@ -96,6 +100,14 @@ public class ShoppingCart {
 
     public void setTotalAmountBeforeDiscount(double totalAmountBeforeDiscount) {
         this.totalAmountBeforeDiscount = totalAmountBeforeDiscount;
+    }
+
+    public List<TestItem> getTestItem() {
+        return testItem;
+    }
+
+    public void setTestItem(List<TestItem> testItem) {
+        this.testItem = testItem;
     }
 
     /*public List<DiscountRule> getDealsApplied() {
