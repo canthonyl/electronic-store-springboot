@@ -75,7 +75,7 @@ public class ParameterTypes {
         return p;
     }
 
-    @DataTableType
+    /*@DataTableType
     public Item convertItem(Map<String, String> entry) {
         Map<String, String> map = new HashMap<>();
         entry.forEach((k,v) -> map.put(toCamelCase(k), v));
@@ -97,7 +97,7 @@ public class ParameterTypes {
         Optional.ofNullable(map.get("discountApplied")).map(this::toList).ifPresent(e::setDiscountApplied);
 
         return e;
-    }
+    }*/
 
     @DataTableType
     public ShoppingCartItem convertShoppingCartItem(Map<String, String> entry) {
@@ -109,7 +109,7 @@ public class ParameterTypes {
         e.setProduct(product);
 
         Optional.ofNullable(map.get("id")).map(Long::valueOf).ifPresent(e::setId);
-        Optional.ofNullable(map.get("cartId")).map(Long::valueOf).ifPresent(e::setShoppingCartId);
+        Optional.ofNullable(map.get("cartId")).map(Long::valueOf).ifPresent(id -> e.setShoppingCart(new ShoppingCart(id)));
         Optional.ofNullable(map.get("productId")).map(Long::valueOf).ifPresent(product::setId);
         Optional.ofNullable(map.get("quantity")).map(Integer::valueOf).ifPresent(e::setQuantity);
         Optional.ofNullable(map.get("price")).map(Double::valueOf).ifPresent(e::setPrice);

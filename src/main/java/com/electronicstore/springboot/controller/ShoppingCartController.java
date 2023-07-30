@@ -3,14 +3,17 @@ package com.electronicstore.springboot.controller;
 import com.electronicstore.springboot.context.CommonContext;
 import com.electronicstore.springboot.dto.ShoppingCartRequest;
 import com.electronicstore.springboot.dto.ShoppingCartResponse;
-import com.electronicstore.springboot.model.Item;
 import com.electronicstore.springboot.model.ShoppingCart;
+import com.electronicstore.springboot.model.ShoppingCartItem;
 import com.electronicstore.springboot.service.ShoppingCartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import static com.electronicstore.springboot.dto.ShoppingCartRequest.ResponseType.ShoppingCart;
 
@@ -34,7 +37,7 @@ public class ShoppingCartController {
     }
 
     @GetMapping("{cartId}/items/{itemId}")
-    public ResponseEntity<Item> getShoppingCartItem(@PathVariable(name="cartId") Long cartId, @PathVariable(name="itemId") Long itemId) {
+    public ResponseEntity<ShoppingCartItem> getShoppingCartItem(@PathVariable(name="cartId") Long cartId, @PathVariable(name="itemId") Long itemId) {
         if (!shoppingCartService.shoppingCartExists(cartId)) {
             return ResponseEntity.notFound().build();
         }
@@ -45,8 +48,10 @@ public class ShoppingCartController {
 
     //TODO change request type to Shopping Cart Request
     @PostMapping
-    public ResponseEntity<ShoppingCartResponse> createShoppingCart(@RequestBody ShoppingCart request) {
-        ShoppingCart shoppingCart = shoppingCartService.createShoppingCart(request);
+    public ResponseEntity<ShoppingCartResponse> createShoppingCart(@RequestBody ShoppingCartRequest request) {
+        List<ShoppingCartItem> initialItems = Optional.ofNullable(request.getShoppingCartItems()).orElse(Collections.emptyList());
+        ShoppingCart shoppingCart = new ShoppingCart(initialItems);
+        shoppingCartService.createShoppingCart(shoppingCart);
         URI uri = appContext.getBaseUriBuilder()
                 .pathSegment("shoppingCarts", "{id}")
                 .buildAndExpand(shoppingCart.getId())

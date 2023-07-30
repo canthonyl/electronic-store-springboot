@@ -1,5 +1,8 @@
 package com.electronicstore.springboot.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.util.List;
@@ -7,6 +10,8 @@ import java.util.List;
 //TODO Lombok @NoArgsConstructor
 //TODO @GetterAndSetter
 @Entity
+@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="id")
+@JsonIgnoreProperties({"shoppingCart"})
 public class ShoppingCartItem {
 
     @Id
@@ -14,9 +19,20 @@ public class ShoppingCartItem {
     @SequenceGenerator(name = "shopping_cart_item_id_seq", sequenceName = "shopping_cart_item_id_seq", allocationSize = 1)
     private Long id;
 
-    @Column(table = "shopping_cart_item", name = "shopping_cart_id")
-    private Long shoppingCartId;
+    /*@Column(table = "shopping_cart_item", name = "shopping_cart_id")
+    private Long shoppingCartId;*/
+    @ManyToOne
+    private ShoppingCart shoppingCart;
 
+    public ShoppingCart getShoppingCart() {
+        return shoppingCart;
+    }
+
+    public void setShoppingCart(ShoppingCart shoppingCart) {
+        this.shoppingCart = shoppingCart;
+    }
+
+    //TODO flatten or custom serialize
     @ManyToOne
     private Product product;
 
@@ -35,17 +51,24 @@ public class ShoppingCartItem {
     public ShoppingCartItem() {
     }
 
-    public ShoppingCartItem(Long shoppingCartId, Long productId, int quantity) {
-        this.shoppingCartId = shoppingCartId;
-        this.quantity = quantity;
-        this.product = new Product(productId);
+    public ShoppingCartItem(Long productId, int quantity) {
+        this(null, new Product(productId), quantity);
+    }
 
+    public ShoppingCartItem(Long shoppingCartId, Long productId, int quantity) {
+        this(new ShoppingCart(shoppingCartId), new Product(productId), quantity);
+    }
+
+    public ShoppingCartItem(ShoppingCart cart, Product product, int quantity) {
+        this.shoppingCart = cart;
+        this.product = product;
+        this.quantity = quantity;
     }
 
 
     public ShoppingCartItem(Long id, Long shoppingCartId, Long productId) {
         this.id = id;
-        this.shoppingCartId = shoppingCartId;
+        //this.shoppingCartId = shoppingCartId;
         this.product = new Product(productId);
     }
 
@@ -58,13 +81,13 @@ public class ShoppingCartItem {
         this.id = id;
     }
 
-    public Long getShoppingCartId() {
+    /*public Long getShoppingCartId() {
         return shoppingCartId;
     }
 
     public void setShoppingCartId(Long shoppingCartId) {
         this.shoppingCartId = shoppingCartId;
-    }
+    }*/
 
     public Product getProduct() {
         return product;

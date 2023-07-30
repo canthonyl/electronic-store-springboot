@@ -215,14 +215,11 @@ public class Steps {
     }
 
     @Given("a shopping cart with id {int} is created with the following items")
-    public void aNewCartIsCreatedWithItems(long cartId, List<Item> items) {
-        ShoppingCart request = new ShoppingCart(cartId);
-        request.setItems(items);
-
-        ShoppingCart result = shoppingCartService.createShoppingCart(request);
-        assertEquals(cartId, result.getId().longValue());
-        result = shoppingCartService.getShoppingCart(cartId).get();
-        scenarioContext.shoppingCarts.put(result.getId(), result);
+    public void aNewCartIsCreatedWithItems(long cartId, List<ShoppingCartItem> items) {
+        ShoppingCart shoppingCart = new ShoppingCart(items);
+        shoppingCartService.createShoppingCart(shoppingCart);
+        assertEquals(cartId, shoppingCart.getId().longValue());
+        scenarioContext.shoppingCarts.put(cartId, shoppingCart);
     }
 
     /*@Given("a shopping cart with id {int} is created with the following items")
@@ -236,7 +233,8 @@ public class Steps {
 
     @When("the following items are added to the shopping cart id {int}")
     public void productIsAddedToShoppingCartId(long cartId, List<ShoppingCartItem> items) {
-        items.forEach(i-> i.setShoppingCartId(cartId));
+        ShoppingCart cart = new ShoppingCart(cartId);
+        items.forEach(i-> i.setShoppingCart(cart));
         shoppingCartService.addShoppingCartItems(cartId, items);
     }
 
@@ -249,13 +247,13 @@ public class Steps {
     }
 
     @Then("shopping cart id {int} is refreshed with the following items")
-    public void shoppingCartItemListIsAfterRefresh(long cartId, List<Item> list) {
+    public void shoppingCartItemListIsAfterRefresh(long cartId, List<ShoppingCartItem> list) {
         shoppingCartIsRefreshed(cartId);
         shoppingCartItemListIs(cartId, list);
     }
 
     @Then("shopping cart id {int} contains the following items")
-    public void shoppingCartItemListIs(long cartId, List<Item> list) {
+    public void shoppingCartItemListIs(long cartId, List<ShoppingCartItem> list) {
         ShoppingCart cart = scenarioContext.shoppingCarts.get(cartId);
         assertShoppingCartItemsEquals(list, cart.getItems());
     }
@@ -292,13 +290,13 @@ public class Steps {
         return map;
     }
 
-    private void assertShoppingCartItemsEquals(Collection<Item> c1, Collection<Item> c2) {
-        Map<Long, Item> map1 = c1.stream().collect(toMap(Item::getId, Function.identity()));
-        Map<Long, Item> map2 = c2.stream().collect(toMap(Item::getId, Function.identity()));
+    private void assertShoppingCartItemsEquals(Collection<ShoppingCartItem> c1, Collection<ShoppingCartItem> c2) {
+        Map<Long, ShoppingCartItem> map1 = c1.stream().collect(toMap(ShoppingCartItem::getId, Function.identity()));
+        Map<Long, ShoppingCartItem> map2 = c2.stream().collect(toMap(ShoppingCartItem::getId, Function.identity()));
         assertEquals(map1.keySet(), map2.keySet());
 
         map1.forEach((id, item1) -> {
-            Item item2 = map2.get(id);
+            ShoppingCartItem item2 = map2.get(id);
             assertEquals(item1.getProduct().getId(), item2.getProduct().getId());
             assertEquals(item1.getQuantity(), item2.getQuantity());
             assertEquals(item1.getPrice(), item2.getPrice(), 0.001);

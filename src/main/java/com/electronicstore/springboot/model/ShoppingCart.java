@@ -1,11 +1,14 @@
 package com.electronicstore.springboot.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
 
 import java.util.LinkedList;
 import java.util.List;
 
 @Entity
+@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="id")
 public class ShoppingCart {
 
     @Id
@@ -13,9 +16,19 @@ public class ShoppingCart {
     @SequenceGenerator(name = "shopping_cart_id_seq", sequenceName = "shopping_cart_id_seq", allocationSize = 1)
     private Long id;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    /*@ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "shopping_cart_item")
-    private List<Item> items;
+    private List<Item> items;*/
+    @OneToMany(mappedBy="shoppingCart", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private List<ShoppingCartItem> items;
+
+    public List<ShoppingCartItem> getItems() {
+        return items;
+    }
+
+    public void setItems(List<ShoppingCartItem> items) {
+        this.items = items;
+    }
 
     private transient double totalAmountBeforeDiscount;
 
@@ -32,6 +45,11 @@ public class ShoppingCart {
         this.id = id;
     }
 
+    public ShoppingCart(List<ShoppingCartItem> initialItems) {
+        items = initialItems;
+        initialItems.forEach(i -> i.setShoppingCart(this));
+    }
+
     public Long getId() {
         return id;
     }
@@ -40,13 +58,6 @@ public class ShoppingCart {
         this.id = id;
     }
 
-    public List<Item> getItems() {
-        return items;
-    }
-
-    public void setItems(List<Item> items) {
-        this.items = items;
-    }
 
     public double getTotalAmount() {
         return totalAmount;

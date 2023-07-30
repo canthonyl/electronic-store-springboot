@@ -1,0 +1,22 @@
+{
+  "shoppingCartItems": [
+    {
+      "product": {
+        "id": 1
+      },
+      "quantity": 1
+    },
+    {
+      "product": {
+        "id": 2
+      },
+      "quantity": 1
+    },
+    {
+      "product": {
+        "id": 3
+      },
+      "quantity": 1
+    }
+  ]
+}

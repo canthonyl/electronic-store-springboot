@@ -6,6 +6,8 @@ import com.electronicstore.springboot.dto.ShoppingCartRequest;
 import com.electronicstore.springboot.service.ShoppingCartService;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -16,7 +18,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
-import java.util.List;
 import java.util.Optional;
 
 import static com.electronicstore.springboot.fixture.Examples.*;
@@ -46,16 +47,30 @@ public class ShoppingCartControllerTest {
 
     private Gson gson = new Gson();
 
-    @Test
-    public void testNewShoppingCart(){
-        when(shoppingCartService.createShoppingCart(any(ShoppingCart.class))).thenReturn(shoppingCart1);
 
+    @Test
+    public void httpPostRequestCreatesNewShoppingCart(){
+        when(shoppingCartService.createShoppingCart(any(ShoppingCart.class)))
+                .thenAnswer(i -> {ShoppingCart cart = i.getArgument(0, ShoppingCart.class);
+                    cart.setId(1L);
+                    return cart;})
+                ;
+        
         String productUri = appContext.getBaseUriBuilder().path("shoppingCarts").toUriString();
         HttpEntity<String> emptyPostRequest = RequestEntity.post(productUri).header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).body("{}");
         ResponseEntity<String> response = restTemplate.exchange(productUri, HttpMethod.POST, emptyPostRequest, String.class);
 
         assertEquals(HttpStatus.CREATED.value(), response.getStatusCode().value());
         String responseJson = response.getBody();
+
+        HttpHeaders responseHeaders = response.getHeaders();
+        assertEquals(true, responseHeaders.containsKey(HttpHeaders.LOCATION));
+
+        String location = appContext.getBaseUriBuilder()
+                .pathSegment("shoppingCarts","{id}")
+                .buildAndExpand(1).toUriString();
+
+        assertEquals(location, responseHeaders.get(HttpHeaders.LOCATION).get(0));
 
         assertThat(responseJson, jsonNodePresent("shoppingCart"));
         assertThat(responseJson, jsonPartEquals("shoppingCart.id", 1));

@@ -13,7 +13,6 @@ import javax.sql.DataSource;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.H2;
 
-//TODO resolve no session available error
 //TODO dev profile
 //TODO enable logging of orm mapping
 //TODO applicable managed entity manager for concurrency

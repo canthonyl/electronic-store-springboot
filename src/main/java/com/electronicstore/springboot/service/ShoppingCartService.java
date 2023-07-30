@@ -39,19 +39,19 @@ public class ShoppingCartService {
         return shoppingCartRepository.existsById(id);
     }
 
-    private DealMatchResponse refreshDeals(Map<Long, Product> products, Map<Long, List<Item>> itemsByProduct) {
+    private DealMatchResponse refreshDeals(Map<Long, Product> products, Map<Long, List<ShoppingCartItem>> itemsByProduct) {
         DealMatchRequest request = new DealMatchRequest();
-        for (Map.Entry<Long, List<Item>> e: itemsByProduct.entrySet()) {
-            List<Item> cartItems = e.getValue();
+        for (Map.Entry<Long, List<ShoppingCartItem>> e: itemsByProduct.entrySet()) {
+            List<ShoppingCartItem> cartItems = e.getValue();
             Product product = products.get(e.getKey());
-            for (Item i : cartItems) {
+            for (ShoppingCartItem i : cartItems) {
                 i.setPrice(product.getPrice());
                 i.setAmountBeforeDiscount(i.getQuantity() * product.getPrice());
                 i.setAmount(i.getQuantity() * product.getPrice());
                 request.addCharacteristic(product, DiscountRule.ThresholdType.Qty, i.getQuantity());
                 request.addCharacteristic(product, DiscountRule.ThresholdType.Amount, i.getAmountBeforeDiscount());
             }
-            request.addMapping(product, cartItems.stream().map(Item::getId).toList());
+            request.addMapping(product, cartItems.stream().map(ShoppingCartItem::getId).toList());
         }
         return dealService.matchDeals(request);
     }
@@ -60,7 +60,7 @@ public class ShoppingCartService {
         Map<Long, Product> products = productRepository.findAllById(cart.getItems().stream().map(i -> i.getProduct().getId()).toList())
                 .stream().collect(toMap(Product::getId, Function.identity()));
 
-        Map<Long, List<Item>> itemsByProduct = cart.getItems().stream().collect(groupingBy(i -> i.getProduct().getId(),
+        Map<Long, List<ShoppingCartItem>> itemsByProduct = cart.getItems().stream().collect(groupingBy(i -> i.getProduct().getId(),
                 toList()));
 
         System.out.println("shoppingCartItems = "+cart.getItems());
@@ -69,10 +69,10 @@ public class ShoppingCartService {
         DealMatchResponse response = refreshDeals(products, itemsByProduct);
         Map<Long, Double> itemDiscountAmount = response.getItemsDiscountAmount();
         Map<Long, List<DiscountRule>> itemDiscountRuleApplied = response.getItemIdToDeals();
-        Map<Long, Item> cartItems = cart.getItems().stream().collect(toMap(Item::getId, Function.identity()));
+        Map<Long, ShoppingCartItem> cartItems = cart.getItems().stream().collect(toMap(ShoppingCartItem::getId, Function.identity()));
 
         for (Long itemId : itemDiscountAmount.keySet()) {
-            Item cartItem = cartItems.get(itemId);
+            ShoppingCartItem cartItem = cartItems.get(itemId);
             cartItem.setDiscountAmount(itemDiscountAmount.get(itemId));
             cartItem.setDiscountApplied(itemDiscountRuleApplied.get(itemId)
                     .stream().map(DiscountRule::getDescription).toList());
@@ -82,14 +82,14 @@ public class ShoppingCartService {
         double totalDiscount = 0;
         double totalAmountBeforeDiscount = 0;
 
-        List<Item> removedItems = new LinkedList<>();
+        List<ShoppingCartItem> removedItems = new LinkedList<>();
 
-        for (Map.Entry<Long, List<Item>> e : itemsByProduct.entrySet()) {
+        for (Map.Entry<Long, List<ShoppingCartItem>> e : itemsByProduct.entrySet()) {
             Optional<Product> product = productRepository.findById(e.getKey());
             if (product.isPresent()){
                 Product p = product.get();
-                List<Item> itemList = e.getValue();
-                for (Item i : itemList) {
+                List<ShoppingCartItem> itemList = e.getValue();
+                for (ShoppingCartItem i : itemList) {
                    i.setPrice(p.getPrice());
 
                    double amountBeforeDiscount = i.getQuantity() * i.getPrice();
@@ -125,10 +125,11 @@ public class ShoppingCartService {
     }
 
     public ShoppingCart createShoppingCart(ShoppingCart shoppingCart) {
-        return shoppingCartRepository.save(shoppingCart);
+        ShoppingCart cart = shoppingCartRepository.save(shoppingCart);
+        return cart;
     }
 
-    public Optional<Item> getShoppingCartItem(Long cartId, Long itemId) {
+    public Optional<ShoppingCartItem> getShoppingCartItem(Long cartId, Long itemId) {
         return getShoppingCart(cartId)
                 .flatMap(s -> s.getItems().stream().filter(i -> i.getId().equals(itemId)).findFirst());
     }
@@ -142,10 +143,12 @@ public class ShoppingCartService {
     }
 
     public void addShoppingCartItems(Long cartId, List<ShoppingCartItem> items) {
+        ShoppingCart cart = new ShoppingCart(cartId);
+        items.forEach(i -> i.setShoppingCart(cart));
         shoppingCartItemRepository.saveAll(items);
     }
 
-    public void updateShoppingCartItems(Long cartId, Long itemId, Item item) {
+    public void updateShoppingCartItems(Long cartId, Long itemId, ShoppingCartItem ShoppingCartItem) {
 
     }
 }
