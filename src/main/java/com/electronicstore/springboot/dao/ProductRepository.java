@@ -2,7 +2,6 @@ package com.electronicstore.springboot.dao;
 
 import com.electronicstore.springboot.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,9 +11,7 @@ import java.util.Optional;
 @Repository
 //@Cacheable
 @Transactional
-public interface ProductRepository
-        //extends ListCrudRepository<Product, Long> {
-        extends JpaRepository<Product, Long>, BaseRepository<Product, Long>  {
+public interface ProductRepository extends JpaRepository<Product, Long>, BaseRepository<Product, Long> {
 
     @Override
     <S extends Product> S save(S product);

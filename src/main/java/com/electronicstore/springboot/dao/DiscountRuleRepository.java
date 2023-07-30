@@ -3,7 +3,6 @@ package com.electronicstore.springboot.dao;
 import com.electronicstore.springboot.model.DiscountRule;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -11,9 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface DiscountRuleRepository
-        //extends ListCrudRepository<DiscountRule, Long> {
-        extends JpaRepository<DiscountRule, Long>, BaseRepository<DiscountRule, Long> {
+public interface DiscountRuleRepository extends JpaRepository<DiscountRule, Long>, BaseRepository<DiscountRule, Long> {
 
     @Override
     Optional<DiscountRule> findById(Long id);
