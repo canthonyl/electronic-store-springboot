@@ -38,7 +38,13 @@ public class Examples {
 
     public static ShoppingCart shoppingCart2 = new ShoppingCart(2L);
 
+    public static ShoppingCartItem predefinedItem1= new ShoppingCartItem();
+
     static {
+        predefinedItem1.setId(1L);
+        predefinedItem1.setShoppingCart(shoppingCart1);
+        predefinedItem1.setProductId(1L);
+
         ShoppingCartItem cart2Item1 = new ShoppingCartItem();
         cart2Item1.setId(1L);
         cart2Item1.setShoppingCart(shoppingCart2);
@@ -47,12 +53,11 @@ public class Examples {
         cart2Item1.setAmountBeforeDiscount(11000);
         cart2Item1.setDiscountAmount(2000);
         cart2Item1.setAmount(9000);
-        cart2Item1.setProduct(product1);
+        cart2Item1.setProductId(product1.getId());
 
         shoppingCart2.setItems(List.of(cart2Item1));
     }
-    public static List<ShoppingCartItem> shoppingCart2Items = List.of(
-           new ShoppingCartItem(1L, 1L, 1L)
-    );
+
+    public static List<ShoppingCartItem> shoppingCart2Items = List.of(predefinedItem1);
 
 }

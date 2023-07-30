@@ -55,7 +55,7 @@ public class ShoppingCartControllerTest {
                     cart.setId(1L);
                     return cart;})
                 ;
-        
+
         String productUri = appContext.getBaseUriBuilder().path("shoppingCarts").toUriString();
         HttpEntity<String> emptyPostRequest = RequestEntity.post(productUri).header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).body("{}");
         ResponseEntity<String> response = restTemplate.exchange(productUri, HttpMethod.POST, emptyPostRequest, String.class);
@@ -91,7 +91,7 @@ public class ShoppingCartControllerTest {
         assertThat(responseJson, jsonPartEquals("id", id));
         assertThat(responseJson, jsonNodePresent("items[0]"));
         assertThat(responseJson, jsonPartEquals("items[0].id", shoppingCart2.getItems().get(0).getId()));
-        assertThat(responseJson, jsonPartEquals("items[0].product.id", shoppingCart2.getItems().get(0).getProduct().getId()));
+        assertThat(responseJson, jsonPartEquals("items[0].productId", shoppingCart2.getItems().get(0).getProductId()));
 
         String cart3Url = appContext.getBaseUriBuilder().pathSegment("shoppingCarts","{id}").buildAndExpand(3).toUriString();
         ResponseEntity<String> product3response = restTemplate.getForEntity(cart3Url, String.class);
@@ -111,7 +111,7 @@ public class ShoppingCartControllerTest {
 
         String cart2Item1 = cart2Item1Response.getBody();
         assertThat(cart2Item1, jsonPartEquals("id", 1L));
-        assertThat(cart2Item1, jsonPartEquals("product.id", 1L));
+        assertThat(cart2Item1, jsonPartEquals("productId", 1L));
         assertThat(cart2Item1, jsonPartEquals("quantity", 1));
         assertThat(cart2Item1, jsonPartEquals("price", 11000.0));
         assertThat(cart2Item1, jsonPartEquals("amountBeforeDiscount", 11000.0));
@@ -150,8 +150,7 @@ public class ShoppingCartControllerTest {
         assertThat(responseJson, jsonPartEquals("shoppingCart.id", 2L));
         assertThat(responseJson, jsonNodePresent("shoppingCart.items[0]"));
         assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].id", 1L));
-        assertThat(responseJson, jsonNodePresent("shoppingCart.items[0].product"));
-        assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].product.id", 1L));
+        assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].productId", 1L));
         assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].price", 11000.0));
 
         request.setResponseType(ShoppingCartRequest.ResponseType.None);

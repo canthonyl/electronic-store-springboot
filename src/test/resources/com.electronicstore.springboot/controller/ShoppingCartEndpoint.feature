@@ -36,15 +36,15 @@ Feature: Products can be added and removed to shopping cart
           "responseType": "ShoppingCart",
           "shoppingCartItems" : [
             {
-              "product" : {"id" : 1},
+              "productId" : 1,
               "quantity" : 2
             },
             {
-              "product" : {"id" : 3},
+              "productId" : 3,
               "quantity" : 2
             },
             {
-              "product" : {"id" : 5},
+              "productId" : 5,
               "quantity" : 2
             }
           ]
@@ -62,13 +62,7 @@ Feature: Products can be added and removed to shopping cart
             "items": [
               {
                 "id": 1,
-                "product": {
-                  "id": 1,
-                  "name": null,
-                  "description": null,
-                  "price": null,
-                  "categoryId": null
-                },
+                "productId": 1,
                 "quantity": 2,
                 "price": 11000.0,
                 "amountBeforeDiscount": 22000.0,
@@ -78,13 +72,7 @@ Feature: Products can be added and removed to shopping cart
               },
               {
                 "id": 2,
-                "product": {
-                  "id": 3,
-                  "name": null,
-                  "description": null,
-                  "price": null,
-                  "categoryId": null
-                },
+                "productId": 3,
                 "quantity": 2,
                 "price": 678.0,
                 "amountBeforeDiscount": 1356.0,
@@ -94,13 +82,7 @@ Feature: Products can be added and removed to shopping cart
               },
               {
                 "id": 3,
-                "product": {
-                  "id": 5,
-                  "name": null,
-                  "description": null,
-                  "price": null,
-                  "categoryId": null
-                },
+                "productId": 5,
                 "quantity": 2,
                 "price": 567.0,
                 "amountBeforeDiscount": 1134.0,

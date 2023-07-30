@@ -297,7 +297,7 @@ public class Steps {
 
         map1.forEach((id, item1) -> {
             ShoppingCartItem item2 = map2.get(id);
-            assertEquals(item1.getProduct().getId(), item2.getProduct().getId());
+            assertEquals(item1.getProductId(), item2.getProductId());
             assertEquals(item1.getQuantity(), item2.getQuantity());
             assertEquals(item1.getPrice(), item2.getPrice(), 0.001);
             assertEquals(item1.getAmountBeforeDiscount(), item2.getAmountBeforeDiscount(), 0.001);

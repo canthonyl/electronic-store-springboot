@@ -57,10 +57,10 @@ public class ShoppingCartService {
     }
 
     public void refreshShoppingCart(ShoppingCart cart) {
-        Map<Long, Product> products = productRepository.findAllById(cart.getItems().stream().map(i -> i.getProduct().getId()).toList())
+        Map<Long, Product> products = productRepository.findAllById(cart.getItems().stream().map(ShoppingCartItem::getProductId).toList())
                 .stream().collect(toMap(Product::getId, Function.identity()));
 
-        Map<Long, List<ShoppingCartItem>> itemsByProduct = cart.getItems().stream().collect(groupingBy(i -> i.getProduct().getId(),
+        Map<Long, List<ShoppingCartItem>> itemsByProduct = cart.getItems().stream().collect(groupingBy(ShoppingCartItem::getProductId,
                 toList()));
 
         System.out.println("shoppingCartItems = "+cart.getItems());

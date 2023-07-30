@@ -104,13 +104,13 @@ public class ParameterTypes {
         Map<String, String> map = new HashMap<>();
         entry.forEach((k,v) -> map.put(toCamelCase(k), v));
 
-        Product product = new Product();
+        //Product product = new Product();
         ShoppingCartItem e = new ShoppingCartItem();
-        e.setProduct(product);
+        //e.setProduct(product);
 
         Optional.ofNullable(map.get("id")).map(Long::valueOf).ifPresent(e::setId);
         Optional.ofNullable(map.get("cartId")).map(Long::valueOf).ifPresent(id -> e.setShoppingCart(new ShoppingCart(id)));
-        Optional.ofNullable(map.get("productId")).map(Long::valueOf).ifPresent(product::setId);
+        Optional.ofNullable(map.get("productId")).map(Long::valueOf).ifPresent(e::setProductId);
         Optional.ofNullable(map.get("quantity")).map(Integer::valueOf).ifPresent(e::setQuantity);
         Optional.ofNullable(map.get("price")).map(Double::valueOf).ifPresent(e::setPrice);
         Optional.ofNullable(map.get("amountBeforeDiscount")).map(Double::valueOf).ifPresent(e::setAmountBeforeDiscount);

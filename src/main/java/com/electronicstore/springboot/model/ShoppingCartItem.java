@@ -32,9 +32,15 @@ public class ShoppingCartItem {
         this.shoppingCart = shoppingCart;
     }
 
-    //TODO flatten or custom serialize
-    @ManyToOne
-    private Product product;
+    private Long productId;
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
 
     private int quantity;
 
@@ -52,26 +58,28 @@ public class ShoppingCartItem {
     }
 
     public ShoppingCartItem(Long productId, int quantity) {
-        this(null, new Product(productId), quantity);
-    }
-
-    public ShoppingCartItem(Long shoppingCartId, Long productId, int quantity) {
-        this(new ShoppingCart(shoppingCartId), new Product(productId), quantity);
-    }
-
-    public ShoppingCartItem(ShoppingCart cart, Product product, int quantity) {
-        this.shoppingCart = cart;
-        this.product = product;
+        this.productId = productId;
         this.quantity = quantity;
     }
 
+    public ShoppingCartItem(Long shoppingCartId, Long productId, int quantity) {
+        //this(new ShoppingCart(shoppingCartId), new Product(productId), quantity);
+        this.shoppingCart = new ShoppingCart(shoppingCartId);
+        this.productId = productId;
+        this.quantity = quantity;
+    }
 
-    public ShoppingCartItem(Long id, Long shoppingCartId, Long productId) {
+    /*public ShoppingCartItem(ShoppingCart cart, Product product, int quantity) {
+        this.shoppingCart = cart;
+        this.product = product;
+        this.quantity = quantity;
+    }*/
+
+    /*public ShoppingCartItem(Long id, Long shoppingCartId, Long productId) {
         this.id = id;
         //this.shoppingCartId = shoppingCartId;
         this.product = new Product(productId);
-    }
-
+    }*/
 
     public Long getId() {
         return id;
@@ -89,13 +97,7 @@ public class ShoppingCartItem {
         this.shoppingCartId = shoppingCartId;
     }*/
 
-    public Product getProduct() {
-        return product;
-    }
 
-    public void setProduct(Product product) {
-        this.product = product;
-    }
 
     public int getQuantity() {
         return quantity;
