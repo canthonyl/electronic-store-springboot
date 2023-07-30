@@ -10,9 +10,9 @@ Feature: Products can be added and removed to shopping cart
       | Id | Name                | Description                | Price    | Category Id |
       | 1  | Macbook pro         | Apple Macbook pro          | 11000.00 | 2           |
       | 2  | Dell Desktop        | Dell Desktop i5            | 5000.00  | 1           |
-      | 3  | Mechanical Keyboard | Mechanical Keyboard Clicky | 678.00   | 3           |
+      | 3  | Mechanical Keyboard | Mechanical Keyboard Clicky | 1678.00   | 3           |
       | 4  | iPad Pro            | Apple iPad Pro             | 8000.00  | 3           |
-      | 5  | Bluetooth Mouse     | Logitech bluetooth mouse   | 567.00   | 3           |
+      | 5  | Bluetooth Mouse     | Logitech bluetooth mouse   | 1598.00   | 3           |
     And the following discount rules
       | Id | Description                  | Threshold Unit Type | Threshold Unit | Applicable Unit Type | Applicable Unit | Applicable Discount | Override Amount | Rule Group Id |
       | 1  | Buy 1 get 50% off the second | Qty                 | 2              | Qty                  | 1               | 0.5                 | 0.0             | 1             |
@@ -56,9 +56,9 @@ Feature: Products can be added and removed to shopping cart
         {
           "shoppingCart": {
             "id": 1,
-            "totalAmountBeforeDiscount": 24490.0,
-            "totalDiscountAmount" : 5783.5,
-            "totalAmount" : 18706.5,
+            "totalAmountBeforeDiscount": 28552.0,
+            "totalDiscountAmount" : 6299.0,
+            "totalAmount" : 22253.0,
             "items": [
               {
                 "id": 1,
@@ -74,20 +74,20 @@ Feature: Products can be added and removed to shopping cart
                 "id": 2,
                 "productId": 3,
                 "quantity": 2,
-                "price": 678.0,
-                "amountBeforeDiscount": 1356.0,
+                "price": 1678.0,
+                "amountBeforeDiscount": 3356.0,
                 "discountAmount": 0.0,
-                "amount": 1356.0,
+                "amount": 3356.0,
                 "discountApplied": null
               },
               {
                 "id": 3,
                 "productId": 5,
                 "quantity": 2,
-                "price": 567.0,
-                "amountBeforeDiscount": 1134.0,
-                "discountAmount": 283.5,
-                "amount": 850.5,
+                "price": 1598.0,
+                "amountBeforeDiscount": 3196.0,
+                "discountAmount": 799.0,
+                "amount": 2397.0,
                 "discountApplied": ["Buy 1 get 50% off the second"]
               }
             ]

@@ -46,7 +46,7 @@ public class ShoppingCartController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    //TODO change request type to Shopping Cart Request
+    //TODO: non editable fields are ignored (json deserialization)
     @PostMapping
     public ResponseEntity<ShoppingCartResponse> createShoppingCart(@RequestBody ShoppingCartRequest request) {
         List<ShoppingCartItem> initialItems = Optional.ofNullable(request.getShoppingCartItems()).orElse(Collections.emptyList());

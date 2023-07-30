@@ -28,6 +28,8 @@ public class DealService {
     @Autowired
     private ProductRepository productRepository;
 
+
+
     public DealMatchResponse matchDeals(DealMatchRequest request) {
 
         Set<Long> catId = request.getCharacteristic().get(DiscountRuleSetting.Group.category).keySet();

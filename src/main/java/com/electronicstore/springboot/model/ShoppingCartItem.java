@@ -9,6 +9,7 @@ import java.util.List;
 
 //TODO Lombok @NoArgsConstructor
 //TODO @GetterAndSetter
+
 @Entity
 @JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="id")
 @JsonIgnoreProperties({"shoppingCart"})
