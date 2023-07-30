@@ -100,7 +100,7 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void testAddProduct(){
+    public void httpPostProduct(){
         ProductRequest request = new ProductRequest(Arrays.asList(
                 Examples.ofProduct("Apple Macbook Pro", "Apple Macbook Pro", 11000, 2L),
                 Examples.ofProduct("Dell Desktop", "Dell Desktop", 5000, 1L),

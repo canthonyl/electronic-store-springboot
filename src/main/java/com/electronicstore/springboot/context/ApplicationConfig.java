@@ -13,6 +13,7 @@ import javax.sql.DataSource;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.H2;
 
+//TODO resolve no session available error
 //TODO dev profile
 //TODO enable logging of orm mapping
 //TODO applicable managed entity manager for concurrency
@@ -27,12 +28,14 @@ public class ApplicationConfig {
 
     @Bean
     public DataSource dataSource(){
-        return new EmbeddedDatabaseBuilder()
+        EmbeddedDatabaseBuilder embeddedDatabaseBuilder = new EmbeddedDatabaseBuilder();
+        DataSource ds = embeddedDatabaseBuilder
                 .setName("electronicstoredb")
                 .setType(H2)
                 .setScriptEncoding("UTF-8")
                 .ignoreFailedDrops(true)
                 .build();
+        return ds;
     }
 
     //TODO enable transaction management

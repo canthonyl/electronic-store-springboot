@@ -14,6 +14,8 @@ import java.net.URI;
 
 import static com.electronicstore.springboot.dto.ShoppingCartRequest.ResponseType.ShoppingCart;
 
+//TODO: each request should be associated with a valid session?
+//TODO: apply header attribute at controller level?
 @RestController
 @RequestMapping("/shoppingCarts")
 public class ShoppingCartController {

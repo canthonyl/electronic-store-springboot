@@ -62,7 +62,10 @@ public class ShoppingCartDataStoreTest {
 
         cartRepository.save(instance1);
         assertEquals(1L, instance1.getId());
-        /*shoppingCartRepository.refresh(instance1);*/
+        //cartRepository.refresh(instance1);
+        //assertEquals(1L, instance1.getItems().get(0).getId());
+        //assertEquals(2L, instance1.getItems().get(1).getId());
+        //assertEquals(3L, instance1.getItems().get(2).getId());
 
         ShoppingCart instance2 = cartRepository.findById(1L).get();
         assertEquals(1L, instance2.getItems().get(0).getId());

@@ -6,6 +6,7 @@ import java.util.List;
 
 import static com.electronicstore.springboot.dto.ShoppingCartRequest.ResponseType.Auto;
 
+//TODO web session?
 public class ShoppingCartRequest {
 
     public enum ResponseType { Auto, ShoppingCart, None }
