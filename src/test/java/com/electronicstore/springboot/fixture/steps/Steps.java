@@ -16,7 +16,6 @@ import io.cucumber.java.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 
 import static java.util.stream.Collectors.toMap;
 import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
@@ -70,6 +69,7 @@ public class Steps {
 
     Gson gson = new Gson();
 
+
     @Before
     public void beforeScenario() {
         scenarioContext = new ScenarioContext();
@@ -119,9 +119,10 @@ public class Steps {
 
     @When("a {word} request is sent to {string}")
     public void anHttpRequestWithoutBodyIsSentToEndpoint(String httpMethod, String resource) {
+        HttpEntity<String> emptyPostRequest = RequestEntity.post(resource).header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).body("{}");
         switch(httpMethod) {
             case "GET" -> scenarioContext.response = restTemplate.exchange(resource, GET, null, String.class);//scenarioContext.webTestClientResponse = scenarioContext.webTestClient.get().uri(resource).exchange();
-            case "POST" -> scenarioContext.response = restTemplate.exchange(resource, POST, null, String.class);//scenarioContext.webTestClientResponse = scenarioContext.webTestClient.delete().uri(resource).exchange();
+            case "POST" -> scenarioContext.response = restTemplate.exchange(resource, POST, emptyPostRequest, String.class);//scenarioContext.webTestClientResponse = scenarioContext.webTestClient.delete().uri(resource).exchange();
             case "DELETE" -> scenarioContext.response = restTemplate.exchange(resource, DELETE, null, String.class);//scenarioContext.webTestClientResponse = scenarioContext.webTestClient.delete().uri(resource).exchange();
             default -> fail("TODO httpMethod "+httpMethod);
         }
@@ -208,21 +209,20 @@ public class Steps {
     @Given("an empty shopping cart with id {int} is created")
     @When("a new cart is created with id {int}")
     public void aNewCartIsCreated(long cartId) {
-        ShoppingCart cart = shoppingCartService.createShoppingCart();
+        ShoppingCart cart = shoppingCartService.createShoppingCart(new ShoppingCart());
         assertEquals(cartId, cart.getId().longValue());
         scenarioContext.shoppingCarts.put(cart.getId(), cart);
     }
 
     @Given("a shopping cart with id {int} is created with the following items")
-    public void aNewCartIsCreatedWithItems(long cartId, List<ShoppingCartItem> items) {
-        ShoppingCart cart = shoppingCartService.createShoppingCart();
-        assertEquals(cartId, cart.getId().longValue());
-        /*shoppingCartService.addShoppingCartItems(cartId, initialItems);
-        cart = shoppingCartService.getShoppingCart(cart.getId()).get();
-        assertEquals(initialItems.size(), shoppingCartItemRepository.findAll().size());*/
-        shoppingCartService.addShoppingCartItems(cartId, items);
-        cart = shoppingCartService.getShoppingCart(cartId).get();
-        scenarioContext.shoppingCarts.put(cart.getId(), cart);
+    public void aNewCartIsCreatedWithItems(long cartId, List<Item> items) {
+        ShoppingCart request = new ShoppingCart(cartId);
+        request.setItems(items);
+
+        ShoppingCart result = shoppingCartService.createShoppingCart(request);
+        assertEquals(cartId, result.getId().longValue());
+        result = shoppingCartService.getShoppingCart(cartId).get();
+        scenarioContext.shoppingCarts.put(result.getId(), result);
     }
 
     /*@Given("a shopping cart with id {int} is created with the following items")
@@ -236,6 +236,7 @@ public class Steps {
 
     @When("the following items are added to the shopping cart id {int}")
     public void productIsAddedToShoppingCartId(long cartId, List<ShoppingCartItem> items) {
+        items.forEach(i-> i.setShoppingCartId(cartId));
         shoppingCartService.addShoppingCartItems(cartId, items);
     }
 
@@ -248,13 +249,13 @@ public class Steps {
     }
 
     @Then("shopping cart id {int} is refreshed with the following items")
-    public void shoppingCartItemListIsAfterRefresh(long cartId, List<ShoppingCartItem> list) {
+    public void shoppingCartItemListIsAfterRefresh(long cartId, List<Item> list) {
         shoppingCartIsRefreshed(cartId);
         shoppingCartItemListIs(cartId, list);
     }
 
     @Then("shopping cart id {int} contains the following items")
-    public void shoppingCartItemListIs(long cartId, List<ShoppingCartItem> list) {
+    public void shoppingCartItemListIs(long cartId, List<Item> list) {
         ShoppingCart cart = scenarioContext.shoppingCarts.get(cartId);
         assertShoppingCartItemsEquals(list, cart.getItems());
     }
@@ -291,13 +292,13 @@ public class Steps {
         return map;
     }
 
-    private void assertShoppingCartItemsEquals(Collection<ShoppingCartItem> c1, Collection<ShoppingCartItem> c2) {
-        Map<Long, ShoppingCartItem> map1 = c1.stream().collect(toMap(ShoppingCartItem::getId, Function.identity()));
-        Map<Long, ShoppingCartItem> map2 = c2.stream().collect(toMap(ShoppingCartItem::getId, Function.identity()));
+    private void assertShoppingCartItemsEquals(Collection<Item> c1, Collection<Item> c2) {
+        Map<Long, Item> map1 = c1.stream().collect(toMap(Item::getId, Function.identity()));
+        Map<Long, Item> map2 = c2.stream().collect(toMap(Item::getId, Function.identity()));
         assertEquals(map1.keySet(), map2.keySet());
 
         map1.forEach((id, item1) -> {
-            ShoppingCartItem item2 = map2.get(id);
+            Item item2 = map2.get(id);
             assertEquals(item1.getProduct().getId(), item2.getProduct().getId());
             assertEquals(item1.getQuantity(), item2.getQuantity());
             assertEquals(item1.getPrice(), item2.getPrice(), 0.001);

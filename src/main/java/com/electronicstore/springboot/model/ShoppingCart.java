@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Entity
-@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="id")
+//@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="id")
 public class ShoppingCart {
 
     @Id
@@ -27,10 +27,13 @@ public class ShoppingCart {
 
     //bi-directional
     //@ElementCollection
-    @OneToMany(mappedBy="shoppingCart", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
-    private List<ShoppingCartItem> items;
+    //@OneToMany(mappedBy="shoppingCart", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name="shopping_cart_item")
+    private List<Item> items;
 
     @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name="shopping_cart_test_item")
     private List<TestItem> testItem;
 
     private transient double totalAmountBeforeDiscount;
@@ -40,7 +43,7 @@ public class ShoppingCart {
     private transient double totalAmount;
 
     @JsonIgnoreProperties
-    private transient Map<Long, List<ShoppingCartItem>> itemsByProduct;
+    private transient Map<Long, List<Item>> itemsByProduct;
 
     //private transient List<DiscountRule> dealsApplied;
 
@@ -63,16 +66,16 @@ public class ShoppingCart {
         this.id = id;
     }
 
-    public List<ShoppingCartItem> getItems() {
+    public List<Item> getItems() {
         return items;
     }
 
-    public Map<Long, List<ShoppingCartItem>> getItemsByProduct() {
+    public Map<Long, List<Item>> getItemsByProduct() {
         return itemsByProduct;
         //return items.stream().collect(groupingBy(i -> i.getProduct().getId(), mapping(Function.identity(), toList())));
     }
 
-    public void setItems(List<ShoppingCartItem> items) {
+    public void setItems(List<Item> items) {
         this.items = items;
         this.itemsByProduct = items.stream().collect(Collectors.groupingBy(i -> i.getProduct().getId(),
                 Collectors.toList()));

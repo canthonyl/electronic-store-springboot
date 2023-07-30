@@ -38,7 +38,7 @@ create table shopping_cart (
 );
 
 create table shopping_cart_item (
-     id bigint primary key,
+     id bigint default(next value for shopping_cart_item_id_seq) default on null primary key,
      shopping_cart_id bigint not null,
      product_id bigint not null,
      quantity int,
@@ -76,6 +76,7 @@ create sequence shopping_cart_test_item_id_seq as bigint;
 create table shopping_cart_test_item(
     id bigint default(next value for shopping_cart_test_item_id_seq) default on null,
     shopping_cart_id bigint,
+    product_id bigint,
     text varchar(1000),
     foreign key(shopping_cart_id) references shopping_cart(id)
 );

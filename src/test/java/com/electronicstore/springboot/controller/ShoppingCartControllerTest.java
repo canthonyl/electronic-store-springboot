@@ -23,6 +23,7 @@ import static com.electronicstore.springboot.fixture.Examples.*;
 import static net.javacrumbs.jsonunit.JsonMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
@@ -47,10 +48,11 @@ public class ShoppingCartControllerTest {
 
     @Test
     public void testNewShoppingCart(){
-        when(shoppingCartService.createShoppingCart()).thenReturn(shoppingCart1);
+        when(shoppingCartService.createShoppingCart(any(ShoppingCart.class))).thenReturn(shoppingCart1);
 
         String productUri = appContext.getBaseUriBuilder().path("shoppingCarts").toUriString();
-        ResponseEntity<String> response = restTemplate.exchange(productUri, HttpMethod.POST, null, String.class);
+        HttpEntity<String> emptyPostRequest = RequestEntity.post(productUri).header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).body("{}");
+        ResponseEntity<String> response = restTemplate.exchange(productUri, HttpMethod.POST, emptyPostRequest, String.class);
 
         assertEquals(HttpStatus.CREATED.value(), response.getStatusCode().value());
         String responseJson = response.getBody();
@@ -119,7 +121,7 @@ public class ShoppingCartControllerTest {
 
         ShoppingCartRequest request = new ShoppingCartRequest();
         request.setResponseType(ShoppingCartRequest.ResponseType.ShoppingCart);
-        request.setShoppingCartItems(shoppingCart2.getItems());
+        request.setShoppingCartItems(shoppingCart2Items);
 
         String json;
         ResponseEntity<String> cart2Item2Response;
@@ -135,7 +137,7 @@ public class ShoppingCartControllerTest {
         assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].id", 1L));
         assertThat(responseJson, jsonNodePresent("shoppingCart.items[0].product"));
         assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].product.id", 1L));
-        assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].product.price", 11000.0));
+        assertThat(responseJson, jsonPartEquals("shoppingCart.items[0].price", 11000.0));
 
         request.setResponseType(ShoppingCartRequest.ResponseType.None);
 

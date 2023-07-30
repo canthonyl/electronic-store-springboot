@@ -4,9 +4,11 @@ import com.electronicstore.springboot.context.CommonContext;
 import com.electronicstore.springboot.dto.ShoppingCartRequest;
 import com.electronicstore.springboot.dto.ShoppingCartResponse;
 import com.electronicstore.springboot.model.ShoppingCart;
-import com.electronicstore.springboot.model.ShoppingCartItem;
+import com.electronicstore.springboot.model.Item;
 import com.electronicstore.springboot.service.ShoppingCartService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +34,7 @@ public class ShoppingCartController {
     }
 
     @GetMapping("{cartId}/items/{itemId}")
-    public ResponseEntity<ShoppingCartItem> getShoppingCartItem(@PathVariable(name="cartId") Long cartId, @PathVariable(name="itemId") Long itemId) {
+    public ResponseEntity<Item> getShoppingCartItem(@PathVariable(name="cartId") Long cartId, @PathVariable(name="itemId") Long itemId) {
         if (!shoppingCartService.shoppingCartExists(cartId)) {
             return ResponseEntity.notFound().build();
         }
@@ -41,16 +43,20 @@ public class ShoppingCartController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    //TODO change request type to Shopping Cart Request
     @PostMapping
-    public ResponseEntity<ShoppingCartResponse> createShoppingCart() {
-        ShoppingCart shoppingCart = shoppingCartService.createShoppingCart();
+    public ResponseEntity<ShoppingCartResponse> createShoppingCart(@RequestBody ShoppingCart request) {
+        ShoppingCart shoppingCart = shoppingCartService.createShoppingCart(request);
         URI uri = appContext.getBaseUriBuilder()
                 .pathSegment("shoppingCarts", "{id}")
                 .buildAndExpand(shoppingCart.getId())
                 .toUri();
-        return ResponseEntity.created(uri).body(new ShoppingCartResponse(shoppingCart));
+        return ResponseEntity.created(uri)
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .body(new ShoppingCartResponse(shoppingCart));
     }
 
+    //TODO: apply shopping cart ID to items in this context
     @PostMapping("{cartId}/items")
     public ResponseEntity<ShoppingCartResponse> addShoppingCartItems(@PathVariable(name="cartId") Long cartId, @RequestBody ShoppingCartRequest request) {
         if (!shoppingCartService.shoppingCartExists(cartId)) {
@@ -58,7 +64,10 @@ public class ShoppingCartController {
         }
         shoppingCartService.addShoppingCartItems(cartId, request.getShoppingCartItems());
         if (request.getResponseType() == ShoppingCart) {
-            return ResponseEntity.accepted().body(new ShoppingCartResponse(shoppingCartService.getShoppingCart(cartId).get()));
+            //replace with a refresh method
+            ShoppingCart s = shoppingCartService.getShoppingCart(cartId).get();
+            ShoppingCartResponse body = new ShoppingCartResponse(s);
+            return ResponseEntity.accepted().body(body);
         } else {
             return ResponseEntity.accepted().build();
         }

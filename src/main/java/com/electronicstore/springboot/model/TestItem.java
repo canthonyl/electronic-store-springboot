@@ -3,27 +3,22 @@ package com.electronicstore.springboot.model;
 import jakarta.persistence.*;
 
 @Embeddable
-//@Entity
 public class TestItem {
 
-    //@Id
-    //@Column(name="id")
-    //sequence based generator
-    //@GeneratedValue(strategy= GenerationType.SEQUENCE, generator="shopping_cart_test_item_id_seq")
-    //@SequenceGenerator(name = "shopping_cart_test_item_id_seq", sequenceName = "shopping_cart_test_item_id_seq", allocationSize = 1)
-    //@Id
-    //@GeneratedValue(strategy=GenerationType.IDENTITY)
-    //@Column(name = "id", updatable = false, nullable = false)
     @Column(name="id", insertable = false)
     private Long id;
+
+    @ManyToOne
+    private Product product;
 
     private String text;
 
     public TestItem() {
     }
 
-    public TestItem(String t) {
+    public TestItem(String t, Product product) {
         text = t;
+        this.product = product;
     }
 
     public String getText() {
@@ -41,6 +36,15 @@ public class TestItem {
     public void setId(Long id) {
         this.id = id;
     }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
 
     @Override
     public String toString() {

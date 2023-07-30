@@ -22,14 +22,17 @@ Feature: Products can be added and removed to shopping cart
         {
           "shoppingCartItems" : [
             {
+              "shoppingCartId" : 1,
               "product" : {"id" : 1},
               "quantity" : 1
             },
             {
+              "shoppingCartId" : 1,
               "product" : {"id" : 2},
               "quantity" : 1
             },
             {
+              "shoppingCartId" : 1,
               "product" : {"id" : 3},
               "quantity" : 1
             }

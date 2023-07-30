@@ -1,18 +1,10 @@
 package com.electronicstore.springboot.model;
 
-//import javax.persistence.*;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-
 import jakarta.persistence.*;
 
 import java.util.List;
-import java.util.Objects;
 
-//@Embeddable
 @Entity
-@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="id")
 public class ShoppingCartItem {
 
     @Id
@@ -20,14 +12,8 @@ public class ShoppingCartItem {
     @SequenceGenerator(name = "shopping_cart_item_id_seq", sequenceName = "shopping_cart_item_id_seq", allocationSize = 1)
     private Long id;
 
-    //@Id
-    //private Long shoppingCartId;
-
-    //bi-directional
-    @JsonIgnoreProperties
-    @ManyToOne//(cascade = CascadeType.DETACH)
-    @JoinColumn(name="shopping_cart_id", referencedColumnName="id")
-    private ShoppingCart shoppingCart;
+    @Column(table="shopping_cart_item", name="shopping_cart_id")
+    private Long shoppingCartId;
 
     @ManyToOne
     private Product product;
@@ -44,17 +30,37 @@ public class ShoppingCartItem {
 
     private transient List<String> discountApplied;
 
-    public ShoppingCartItem() { }
+    public ShoppingCartItem(){}
 
-    public ShoppingCartItem(Product product, int quantity) {
-        this.product = product;
+    public ShoppingCartItem(Long shoppingCartId, Long productId, int quantity) {
+        this.shoppingCartId = shoppingCartId;
         this.quantity = quantity;
+        this.product = new Product(productId);
+
     }
 
-    public ShoppingCartItem(Long id, ShoppingCart shoppingCart, Product product) {
+
+    public ShoppingCartItem(Long id, Long shoppingCartId, Long productId) {
+        this.id= id;
+        this.shoppingCartId = shoppingCartId;
+        this.product = new Product(productId);
+    }
+
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
         this.id = id;
-        this.shoppingCart = shoppingCart;
-        this.product = product;
+    }
+
+    public Long getShoppingCartId() {
+        return shoppingCartId;
+    }
+
+    public void setShoppingCartId(Long shoppingCartId) {
+        this.shoppingCartId = shoppingCartId;
     }
 
     public Product getProduct() {
@@ -81,28 +87,12 @@ public class ShoppingCartItem {
         this.price = price;
     }
 
-    public Long getId() {
-        return id;
+    public double getAmountBeforeDiscount() {
+        return amountBeforeDiscount;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    /*public Long getShoppingCartId() {
-        return shoppingCartId;
-    }
-
-    public void setShoppingCartId(Long shoppingCartId) {
-        this.shoppingCartId = shoppingCartId;
-    }*/
-
-    public ShoppingCart getShoppingCart() {
-        return shoppingCart;
-    }
-
-    public void setShoppingCart(ShoppingCart shoppingCart) {
-        this.shoppingCart = shoppingCart;
+    public void setAmountBeforeDiscount(double amountBeforeDiscount) {
+        this.amountBeforeDiscount = amountBeforeDiscount;
     }
 
     public double getDiscountAmount() {
@@ -111,14 +101,6 @@ public class ShoppingCartItem {
 
     public void setDiscountAmount(double discountAmount) {
         this.discountAmount = discountAmount;
-    }
-
-    public double getAmountBeforeDiscount() {
-        return amountBeforeDiscount;
-    }
-
-    public void setAmountBeforeDiscount(double amountBeforeDiscount) {
-        this.amountBeforeDiscount = amountBeforeDiscount;
     }
 
     public double getAmount() {
@@ -135,17 +117,5 @@ public class ShoppingCartItem {
 
     public void setDiscountApplied(List<String> discountApplied) {
         this.discountApplied = discountApplied;
-    }
-
-    public boolean equals(Object o) {
-        if (!(o instanceof ShoppingCartItem)) {
-            return false;
-        }
-        ShoppingCartItem other = (ShoppingCartItem) o;
-        return this.id.equals(other.id);
-    }
-
-    public int hashCode() {
-        return Objects.hash(id);
     }
 }

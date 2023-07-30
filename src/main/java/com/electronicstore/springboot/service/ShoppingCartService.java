@@ -5,10 +5,7 @@ import com.electronicstore.springboot.dao.ShoppingCartItemRepository;
 import com.electronicstore.springboot.dao.ShoppingCartRepository;
 import com.electronicstore.springboot.dto.DealMatchRequest;
 import com.electronicstore.springboot.dto.DealMatchResponse;
-import com.electronicstore.springboot.model.DiscountRule;
-import com.electronicstore.springboot.model.Product;
-import com.electronicstore.springboot.model.ShoppingCart;
-import com.electronicstore.springboot.model.ShoppingCartItem;
+import com.electronicstore.springboot.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,19 +36,19 @@ public class ShoppingCartService {
         return shoppingCartRepository.existsById(id);
     }
 
-    private DealMatchResponse refreshDeals(Map<Long, Product> products, Map<Long, List<ShoppingCartItem>> itemsByProduct) {
+    private DealMatchResponse refreshDeals(Map<Long, Product> products, Map<Long, List<Item>> itemsByProduct) {
         DealMatchRequest request = new DealMatchRequest();
-        for (Map.Entry<Long, List<ShoppingCartItem>> e: itemsByProduct.entrySet()) {
-            List<ShoppingCartItem> cartItems = e.getValue();
+        for (Map.Entry<Long, List<Item>> e: itemsByProduct.entrySet()) {
+            List<Item> cartItems = e.getValue();
             Product product = products.get(e.getKey());
-            for (ShoppingCartItem i : cartItems) {
+            for (Item i : cartItems) {
                 i.setPrice(product.getPrice());
                 i.setAmountBeforeDiscount(i.getQuantity() * product.getPrice());
                 i.setAmount(i.getQuantity() * product.getPrice());
                 request.addCharacteristic(product, DiscountRule.ThresholdType.Qty, i.getQuantity());
                 request.addCharacteristic(product, DiscountRule.ThresholdType.Amount, i.getAmountBeforeDiscount());
             }
-            request.addMapping(product, cartItems.stream().map(ShoppingCartItem::getId).toList());
+            request.addMapping(product, cartItems.stream().map(Item::getId).toList());
         }
         return dealService.matchDeals(request);
     }
@@ -60,7 +57,7 @@ public class ShoppingCartService {
         Map<Long, Product> products = productRepository.findAllById(cart.getItems().stream().map(i -> i.getProduct().getId()).toList())
                 .stream().collect(toMap(Product::getId, Function.identity()));
 
-        Map<Long, List<ShoppingCartItem>> itemsByProduct = cart.getItems().stream().collect(groupingBy(i -> i.getProduct().getId(),
+        Map<Long, List<Item>> itemsByProduct = cart.getItems().stream().collect(groupingBy(i -> i.getProduct().getId(),
                 toList()));
 
         System.out.println("shoppingCartItems = "+cart.getItems());
@@ -69,10 +66,10 @@ public class ShoppingCartService {
         DealMatchResponse response = refreshDeals(products, itemsByProduct);
         Map<Long, Double> itemDiscountAmount = response.getItemsDiscountAmount();
         Map<Long, List<DiscountRule>> itemDiscountRuleApplied = response.getItemIdToDeals();
-        Map<Long, ShoppingCartItem> cartItems = cart.getItems().stream().collect(toMap(ShoppingCartItem::getId, Function.identity()));
+        Map<Long, Item> cartItems = cart.getItems().stream().collect(toMap(Item::getId, Function.identity()));
 
         for (Long itemId : itemDiscountAmount.keySet()) {
-            ShoppingCartItem cartItem = cartItems.get(itemId);
+            Item cartItem = cartItems.get(itemId);
             cartItem.setDiscountAmount(itemDiscountAmount.get(itemId));
             cartItem.setDiscountApplied(itemDiscountRuleApplied.get(itemId)
                     .stream().map(DiscountRule::getDescription).toList());
@@ -82,14 +79,14 @@ public class ShoppingCartService {
         double totalDiscount = 0;
         double totalAmountBeforeDiscount = 0;
 
-        List<ShoppingCartItem> removedItems = new LinkedList<>();
+        List<Item> removedItems = new LinkedList<>();
 
-        for (Map.Entry<Long, List<ShoppingCartItem>> e : itemsByProduct.entrySet()) {
+        for (Map.Entry<Long, List<Item>> e : itemsByProduct.entrySet()) {
             Optional<Product> product = productRepository.findById(e.getKey());
             if (product.isPresent()){
                 Product p = product.get();
-                List<ShoppingCartItem> itemList = e.getValue();
-                for (ShoppingCartItem i : itemList) {
+                List<Item> itemList = e.getValue();
+                for (Item i : itemList) {
                    i.setPrice(p.getPrice());
 
                    double amountBeforeDiscount = i.getQuantity() * i.getPrice();
@@ -124,11 +121,11 @@ public class ShoppingCartService {
         return shoppingCart;
     }
 
-    public ShoppingCart createShoppingCart() {
-        return shoppingCartRepository.save(new ShoppingCart());
+    public ShoppingCart createShoppingCart(ShoppingCart shoppingCart) {
+        return shoppingCartRepository.save(shoppingCart);
     }
 
-    public Optional<ShoppingCartItem> getShoppingCartItem(Long cartId, Long itemId) {
+    public Optional<Item> getShoppingCartItem(Long cartId, Long itemId) {
         return getShoppingCart(cartId)
                 .flatMap(s -> s.getItems().stream().filter(i -> i.getId().equals(itemId)).findFirst());
     }
@@ -142,13 +139,10 @@ public class ShoppingCartService {
     }
 
     public void addShoppingCartItems(Long cartId, List<ShoppingCartItem> items) {
-        ShoppingCart cart = new ShoppingCart(cartId);
-        //TODO:
-        items.forEach(i -> i.setShoppingCart(cart));
         shoppingCartItemRepository.saveAll(items);
     }
 
-    public void updateShoppingCartItems(Long cartId, Long itemId, ShoppingCartItem item) {
+    public void updateShoppingCartItems(Long cartId, Long itemId, Item item) {
 
     }
 }

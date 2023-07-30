@@ -76,18 +76,40 @@ public class ParameterTypes {
     }
 
     @DataTableType
-    public ShoppingCartItem convertShoppingCartItem(Map<String, String> entry) {
+    public Item convertItem(Map<String, String> entry) {
         Map<String, String> map = new HashMap<>();
         entry.forEach((k,v) -> map.put(toCamelCase(k), v));
 
         Product product = new Product();
         ShoppingCart shoppingCart = new ShoppingCart();
-        ShoppingCartItem e = new ShoppingCartItem();
+        Item e = new Item();
         e.setProduct(product);
-        e.setShoppingCart(shoppingCart);
+        //e.setShoppingCart(shoppingCart);
 
         Optional.ofNullable(map.get("id")).map(Long::valueOf).ifPresent(e::setId);
         Optional.ofNullable(map.get("cartId")).map(Long::valueOf).ifPresent(shoppingCart::setId);
+        Optional.ofNullable(map.get("productId")).map(Long::valueOf).ifPresent(product::setId);
+        Optional.ofNullable(map.get("quantity")).map(Integer::valueOf).ifPresent(e::setQuantity);
+        Optional.ofNullable(map.get("price")).map(Double::valueOf).ifPresent(e::setPrice);
+        Optional.ofNullable(map.get("amountBeforeDiscount")).map(Double::valueOf).ifPresent(e::setAmountBeforeDiscount);
+        Optional.ofNullable(map.get("discountAmount")).map(Double::valueOf).ifPresent(e::setDiscountAmount);
+        Optional.ofNullable(map.get("amount")).map(Double::valueOf).ifPresent(e::setAmount);
+        Optional.ofNullable(map.get("discountApplied")).map(this::toList).ifPresent(e::setDiscountApplied);
+
+        return e;
+    }
+
+    @DataTableType
+    public ShoppingCartItem convertShoppingCartItem(Map<String, String> entry) {
+        Map<String, String> map = new HashMap<>();
+        entry.forEach((k,v) -> map.put(toCamelCase(k), v));
+
+        Product product = new Product();
+        ShoppingCartItem e = new ShoppingCartItem();
+        e.setProduct(product);
+
+        Optional.ofNullable(map.get("id")).map(Long::valueOf).ifPresent(e::setId);
+        Optional.ofNullable(map.get("cartId")).map(Long::valueOf).ifPresent(e::setShoppingCartId);
         Optional.ofNullable(map.get("productId")).map(Long::valueOf).ifPresent(product::setId);
         Optional.ofNullable(map.get("quantity")).map(Integer::valueOf).ifPresent(e::setQuantity);
         Optional.ofNullable(map.get("price")).map(Double::valueOf).ifPresent(e::setPrice);

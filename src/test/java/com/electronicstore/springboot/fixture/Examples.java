@@ -2,6 +2,7 @@ package com.electronicstore.springboot.fixture;
 
 import com.electronicstore.springboot.model.Product;
 import com.electronicstore.springboot.model.ShoppingCart;
+import com.electronicstore.springboot.model.Item;
 import com.electronicstore.springboot.model.ShoppingCartItem;
 
 import java.util.List;
@@ -38,7 +39,7 @@ public class Examples {
 
     public static ShoppingCart shoppingCart2 = new ShoppingCart(2L);
     static {
-        ShoppingCartItem item1 = new ShoppingCartItem();
+        Item item1 = new Item();
         item1.setId(1L);
         item1.setQuantity(1);
         item1.setPrice(11000);
@@ -49,5 +50,8 @@ public class Examples {
 
         shoppingCart2.setItems(List.of(item1));
     }
+    public static List<ShoppingCartItem> shoppingCart2Items = List.of(
+           new ShoppingCartItem(1L, 1L, 1L)
+    );
 
 }
