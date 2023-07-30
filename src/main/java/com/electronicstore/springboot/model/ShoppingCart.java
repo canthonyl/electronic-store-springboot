@@ -32,10 +32,6 @@ public class ShoppingCart {
     @CollectionTable(name="shopping_cart_item")
     private List<Item> items;
 
-    @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name="shopping_cart_test_item")
-    private List<TestItem> testItem;
-
     private transient double totalAmountBeforeDiscount;
 
     private transient double totalDiscountAmount;
@@ -103,14 +99,6 @@ public class ShoppingCart {
 
     public void setTotalAmountBeforeDiscount(double totalAmountBeforeDiscount) {
         this.totalAmountBeforeDiscount = totalAmountBeforeDiscount;
-    }
-
-    public List<TestItem> getTestItem() {
-        return testItem;
-    }
-
-    public void setTestItem(List<TestItem> testItem) {
-        this.testItem = testItem;
     }
 
     /*public List<DiscountRule> getDealsApplied() {
