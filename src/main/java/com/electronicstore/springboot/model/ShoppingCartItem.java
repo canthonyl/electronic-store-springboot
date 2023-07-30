@@ -4,15 +4,17 @@ import jakarta.persistence.*;
 
 import java.util.List;
 
+//TODO Lombok @NoArgsConstructor
+//TODO @GetterAndSetter
 @Entity
 public class ShoppingCartItem {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="shopping_cart_item_id_seq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "shopping_cart_item_id_seq")
     @SequenceGenerator(name = "shopping_cart_item_id_seq", sequenceName = "shopping_cart_item_id_seq", allocationSize = 1)
     private Long id;
 
-    @Column(table="shopping_cart_item", name="shopping_cart_id")
+    @Column(table = "shopping_cart_item", name = "shopping_cart_id")
     private Long shoppingCartId;
 
     @ManyToOne
@@ -30,7 +32,8 @@ public class ShoppingCartItem {
 
     private transient List<String> discountApplied;
 
-    public ShoppingCartItem(){}
+    public ShoppingCartItem() {
+    }
 
     public ShoppingCartItem(Long shoppingCartId, Long productId, int quantity) {
         this.shoppingCartId = shoppingCartId;
@@ -41,7 +44,7 @@ public class ShoppingCartItem {
 
 
     public ShoppingCartItem(Long id, Long shoppingCartId, Long productId) {
-        this.id= id;
+        this.id = id;
         this.shoppingCartId = shoppingCartId;
         this.product = new Product(productId);
     }

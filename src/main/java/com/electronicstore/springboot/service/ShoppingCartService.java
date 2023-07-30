@@ -32,6 +32,9 @@ public class ShoppingCartService {
     @Autowired
     private DealService dealService;
 
+    //TODO ensure latest price is used when check out
+    //TODO ensure transaction is not committed if latest price is not used
+
     public boolean shoppingCartExists(Long id) {
         return shoppingCartRepository.existsById(id);
     }

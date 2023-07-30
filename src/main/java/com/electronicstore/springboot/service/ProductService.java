@@ -3,13 +3,10 @@ package com.electronicstore.springboot.service;
 import com.electronicstore.springboot.dao.ProductRepository;
 import com.electronicstore.springboot.model.Product;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 public class ProductService {

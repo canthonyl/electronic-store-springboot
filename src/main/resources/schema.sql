@@ -33,6 +33,7 @@ create table product (
      foreign key(category_id) references product_category(id)
 );
 
+--TODO persist calculation
 create table shopping_cart (
      id bigint primary key
 );
@@ -62,6 +63,7 @@ create table discount_rule(
     rule_group_id bigint
 );
 
+--TODO index for lookup
 create table discount_rule_setting(
     id bigint primary key,
     rule_group_id bigint not null,

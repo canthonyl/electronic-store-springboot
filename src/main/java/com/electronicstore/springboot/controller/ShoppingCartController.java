@@ -3,12 +3,10 @@ package com.electronicstore.springboot.controller;
 import com.electronicstore.springboot.context.CommonContext;
 import com.electronicstore.springboot.dto.ShoppingCartRequest;
 import com.electronicstore.springboot.dto.ShoppingCartResponse;
-import com.electronicstore.springboot.model.ShoppingCart;
 import com.electronicstore.springboot.model.Item;
+import com.electronicstore.springboot.model.ShoppingCart;
 import com.electronicstore.springboot.service.ShoppingCartService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,7 +50,7 @@ public class ShoppingCartController {
                 .buildAndExpand(shoppingCart.getId())
                 .toUri();
         return ResponseEntity.created(uri)
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                //.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .body(new ShoppingCartResponse(shoppingCart));
     }
 

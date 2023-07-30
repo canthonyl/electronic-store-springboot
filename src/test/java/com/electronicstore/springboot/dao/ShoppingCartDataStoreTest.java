@@ -32,9 +32,6 @@ public class ShoppingCartDataStoreTest {
     @Autowired
     ProductRepository productRepository;
 
-    /*@Autowired
-    ShoppingCartTestItemRepository testItemRepository;*/
-
     @Test
     public void testSaveShoppingCartReturnsUniqueIdentifier(){
         ShoppingCart shoppingCart1 = new ShoppingCart();
@@ -45,48 +42,6 @@ public class ShoppingCartDataStoreTest {
         assertEquals(2L, shoppingCart2.getId());
     }
 
-   /* @Test
-    public void testItem(){
-
-        productRepository.save(Examples.product1);
-        productRepository.save(Examples.product2);
-        productRepository.save(Examples.product3);
-
-        assertTrue(productRepository.existsById(1L));
-        assertTrue(productRepository.existsById(2L));
-        assertTrue(productRepository.existsById(3L));
-
-        Product product1 = new Product(1L);
-        Product product2 = new Product(2L);
-        Product product3 = new Product(3L);
-
-        ShoppingCart cart1 = new ShoppingCart();
-        cart1.setTestItem(List.of(new TestItem("cart 1 item 1", product2)));
-        cartRepository.save(cart1);
-
-        ShoppingCart cart2 = new ShoppingCart();
-        cart2.setTestItem(List.of(
-                new TestItem("cart 2 item 1", product3),
-                new TestItem("cart 2 item 2", product1)));
-        cartRepository.save(cart2);
-
-        List<ShoppingCartTestItem> all = testItemRepository.findAll();
-        assertEquals(3, all.size());
-
-        Collections.sort(all, Comparator.comparingLong(ShoppingCartTestItem::getId));
-
-        assertEquals(1L, all.get(0).getId());
-        assertEquals(2L, all.get(0).getProductId());
-        assertEquals("cart 1 item 1", all.get(0).getText());
-
-        assertEquals(2L, all.get(1).getId());
-        assertEquals(3L, all.get(1).getProductId());
-        assertEquals("cart 2 item 1", all.get(1).getText());
-
-        assertEquals(3L, all.get(2).getId());
-        assertEquals(1L, all.get(2).getProductId());
-        assertEquals("cart 2 item 2", all.get(2).getText());
-    }*/
 
     @Test
     public void testSaveShoppingCartWithItemsReturnsUniqueIdentifiers(){

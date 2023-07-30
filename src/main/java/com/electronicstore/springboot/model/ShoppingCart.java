@@ -1,35 +1,20 @@
 package com.electronicstore.springboot.model;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-
 import jakarta.persistence.*;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Entity
-//@JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="id")
 public class ShoppingCart {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="shopping_cart_id_seq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "shopping_cart_id_seq")
     @SequenceGenerator(name = "shopping_cart_id_seq", sequenceName = "shopping_cart_id_seq", allocationSize = 1)
     private Long id;
 
-    //uni-directional
-    //@OneToMany
-    //@JoinColumn(name="shoppingCartId", referencedColumnName="id")
-
-    //bi-directional
-    //@ElementCollection
-    //@OneToMany(mappedBy="shoppingCart", fetch=FetchType.EAGER, cascade=CascadeType.ALL)
     @ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name="shopping_cart_item")
+    @CollectionTable(name = "shopping_cart_item")
     private List<Item> items;
 
     private transient double totalAmountBeforeDiscount;
@@ -38,15 +23,8 @@ public class ShoppingCart {
 
     private transient double totalAmount;
 
-    @JsonIgnoreProperties
-    private transient Map<Long, List<Item>> itemsByProduct;
-
-    //private transient List<DiscountRule> dealsApplied;
-
     public ShoppingCart() {
         items = new LinkedList<>();
-        itemsByProduct = new HashMap<>();
-        //dealsApplied = new LinkedList<>();
     }
 
     public ShoppingCart(Long id) {
@@ -66,15 +44,8 @@ public class ShoppingCart {
         return items;
     }
 
-    public Map<Long, List<Item>> getItemsByProduct() {
-        return itemsByProduct;
-        //return items.stream().collect(groupingBy(i -> i.getProduct().getId(), mapping(Function.identity(), toList())));
-    }
-
     public void setItems(List<Item> items) {
         this.items = items;
-        this.itemsByProduct = items.stream().collect(Collectors.groupingBy(i -> i.getProduct().getId(),
-                Collectors.toList()));
     }
 
     public double getTotalAmount() {

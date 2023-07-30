@@ -22,15 +22,13 @@ import java.util.Map;
 @RequestMapping("/products")
 public class ProductController {
 
-    public static final String ATTRIBUTE_RESOURCE = "resource";
-
     @Autowired
     private CommonContext appContext;
 
     @Autowired
     private ProductService productService;
 
-    //cache
+    //TODO investigate caching of requests
     @GetMapping(path = "{id}")
     public ResponseEntity<Product> getProduct(@PathVariable Long id){
         return productService.getProduct(id)

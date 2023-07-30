@@ -8,12 +8,10 @@ import java.util.Set;
 @Entity
 public class DiscountRuleSetting {
 
-    public enum Group {
-        all, category, product
-    }
+    public enum Group { all, category, product}
 
     @Id
-    @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="discount_rule_setting_id_seq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "discount_rule_setting_id_seq")
     @SequenceGenerator(name = "discount_rule_setting_id_seq", sequenceName = "discount_rule_setting_id_seq", allocationSize = 1)
     private Long id;
 

@@ -1,5 +1,6 @@
 Feature: Shopping cart with items have applicable discount applied to total
 
+  #TODO latest price applied to all shopping carts
   Background:
     Given the following product categories
       | Id | Name                |

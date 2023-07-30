@@ -12,15 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//@Component
-//@ScenarioScope
 public class ScenarioContext {
 
     public List<Product> productDefinitionList;
-
-    public WebTestClient webTestClient;
-
-    public WebTestClient.ResponseSpec webTestClientResponse;
 
     public ResponseEntity<String> response;
 

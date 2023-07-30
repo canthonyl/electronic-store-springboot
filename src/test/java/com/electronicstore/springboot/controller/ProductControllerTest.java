@@ -3,9 +3,7 @@ package com.electronicstore.springboot.controller;
 import com.electronicstore.springboot.context.CommonContext;
 import com.electronicstore.springboot.dto.ProductRequest;
 import com.electronicstore.springboot.fixture.Examples;
-import com.electronicstore.springboot.model.Product;
 import com.electronicstore.springboot.service.ProductService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +15,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.*;
@@ -33,6 +30,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
 
+//TODO Test Coverage Normal Http Status (Get=OK, Post/Delete=Accepted/Created)
+//TODO Test Coverage Non-normal http status (NotFound, BadRequest)
 @ActiveProfiles("test")
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -50,11 +49,10 @@ public class ProductControllerTest {
     private Gson gson = new Gson();
 
     @Test
-    public void testGetProduct(){
+    public void httpGetProduct_validProductId_thenOKAndProductInResponse(){
         when(productService.getProduct(1L)).thenReturn(Optional.of(product1));
         when(productService.getProduct(2L)).thenReturn(Optional.of(product2));
         when(productService.getProduct(3L)).thenReturn(Optional.of(product3));
-        when(productService.getProduct(4L)).thenReturn(Optional.empty());
 
         UriComponentsBuilder uri = appContext.getBaseUriBuilder().pathSegment("products","{id}");
 
@@ -90,6 +88,16 @@ public class ProductControllerTest {
         assertThat(json3, jsonPartEquals("categoryId", product3.getCategoryId()));
     }
 
+    @Test
+    public void httpGetProduct_invalidProductId_thenNotFound(){
+        when(productService.getProduct(1L)).thenReturn(Optional.empty());
+
+        UriComponentsBuilder uri = appContext.getBaseUriBuilder().pathSegment("products","{id}");
+
+        ResponseEntity<String> response1 = restTemplate.getForEntity(uri.buildAndExpand(1).toUriString(), String.class);
+
+        assertEquals(HttpStatus.NOT_FOUND.value(), response1.getStatusCode().value());
+    }
 
     @Test
     public void testAddProduct(){

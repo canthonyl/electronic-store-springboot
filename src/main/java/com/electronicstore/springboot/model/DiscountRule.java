@@ -1,16 +1,17 @@
 package com.electronicstore.springboot.model;
 
 //import javax.persistence.Entity;
+
 import jakarta.persistence.*;
 
 @Entity
 public class DiscountRule {
 
-    public enum ThresholdType {Qty, Amount};
-    public enum ApplicableType {Qty, Amount};
+    public enum ThresholdType {Qty, Amount}
+    public enum ApplicableType {Qty, Amount}
 
     @Id
-    @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="discount_rule_id_seq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "discount_rule_id_seq")
     @SequenceGenerator(name = "discount_rule_id_seq", sequenceName = "discount_rule_id_seq", allocationSize = 1)
     private Long id;
 
@@ -31,7 +32,6 @@ public class DiscountRule {
     private String description;
 
     private long ruleGroupId;
-
 
     public Long getId() {
         return id;

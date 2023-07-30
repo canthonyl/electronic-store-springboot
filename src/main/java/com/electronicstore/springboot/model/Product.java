@@ -3,17 +3,11 @@ package com.electronicstore.springboot.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 
-/*import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;*/
-
 @Entity
 public class Product {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.SEQUENCE, generator="product_id_seq")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "product_id_seq")
     @SequenceGenerator(name = "product_id_seq", sequenceName = "product_id_seq", allocationSize = 1)
     private Long id;
 
@@ -24,10 +18,11 @@ public class Product {
 
     private Double price;
 
-    @Column(name="category_id")
+    @Column(name = "category_id")
     private Long categoryId;
 
-    public Product() {}
+    public Product() {
+    }
 
     public Product(Long id) {
         this.id = id;
