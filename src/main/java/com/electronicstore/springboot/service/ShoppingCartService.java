@@ -1,5 +1,6 @@
 package com.electronicstore.springboot.service;
 
+import com.electronicstore.springboot.concurrent.LRUCache;
 import com.electronicstore.springboot.dao.ProductRepository;
 import com.electronicstore.springboot.dao.ShoppingCartItemRepository;
 import com.electronicstore.springboot.dao.ShoppingCartRepository;
@@ -9,11 +10,9 @@ import com.electronicstore.springboot.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.*;
@@ -32,6 +31,16 @@ public class ShoppingCartService {
 
     @Autowired
     private DealService dealService;
+
+
+    private final LRUCache shoppingCartCache;
+
+    private final Queue<ShoppingCart> evictedQueue;
+
+    public ShoppingCartService(){
+        evictedQueue = new ConcurrentLinkedQueue<>();
+        shoppingCartCache = new LRUCache(100, evictedQueue);
+    }
 
     //TODO ensure latest price is used when check out
     //TODO ensure transaction is not committed if latest price is not used
@@ -149,4 +158,13 @@ public class ShoppingCartService {
     public void updateShoppingCartItems(Long cartId, Long itemId, ShoppingCartItem ShoppingCartItem) {
 
     }
+
+    public LRUCache getShoppingCartCache() {
+        return shoppingCartCache;
+    }
+
+    public Queue<ShoppingCart> getEvictedQueue() {
+        return evictedQueue;
+    }
+
 }
