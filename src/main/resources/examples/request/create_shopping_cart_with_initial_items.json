@@ -1,4 +1,5 @@
 {
+  "responseType": "ShoppingCart",
   "shoppingCartItems": [
     {
       "productId": 1,

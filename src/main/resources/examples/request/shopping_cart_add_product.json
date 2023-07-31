@@ -1,10 +1,8 @@
 {
   "shoppingCartItems": [
     {
-      "shoppingCartId": 1,
-      "product": {
-        "id": 1
-      },
+      "shoppingCart": { "id": 1 },
+      "productId": 1,
       "quantity": 1
     }
   ]

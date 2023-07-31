@@ -13,6 +13,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static java.util.stream.Collectors.*;
@@ -62,9 +63,6 @@ public class ShoppingCartService {
 
         Map<Long, List<ShoppingCartItem>> itemsByProduct = cart.getItems().stream().collect(groupingBy(ShoppingCartItem::getProductId,
                 toList()));
-
-        System.out.println("shoppingCartItems = "+cart.getItems());
-        System.out.println("shoppingCartItemsByProduct = "+itemsByProduct);
 
         DealMatchResponse response = refreshDeals(products, itemsByProduct);
         Map<Long, Double> itemDiscountAmount = response.getItemsDiscountAmount();

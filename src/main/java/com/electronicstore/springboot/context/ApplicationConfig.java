@@ -18,9 +18,7 @@ import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.
 //TODO applicable managed entity manager for concurrency
 @Profile("default")
 @Configuration
-@EnableJpaRepositories(basePackages = "com.electronicstore.springboot"
-        , repositoryBaseClass = BaseRepositoryImpl.class
-)
+@EnableJpaRepositories(basePackages = "com.electronicstore.springboot", repositoryBaseClass = BaseRepositoryImpl.class)
 @EntityScan(basePackages = {"com.electronicstore.springboot.model"})
 @EnableTransactionManagement
 public class ApplicationConfig {

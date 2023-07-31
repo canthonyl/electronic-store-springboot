@@ -71,9 +71,6 @@ public class ShoppingCartControllerTest {
                 .buildAndExpand(1).toUriString();
 
         assertEquals(location, responseHeaders.get(HttpHeaders.LOCATION).get(0));
-
-        assertThat(responseJson, jsonNodePresent("shoppingCart"));
-        assertThat(responseJson, jsonPartEquals("shoppingCart.id", 1));
     }
 
     @Test

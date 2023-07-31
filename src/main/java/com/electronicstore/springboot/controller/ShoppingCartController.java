@@ -6,6 +6,7 @@ import com.electronicstore.springboot.dto.ShoppingCartResponse;
 import com.electronicstore.springboot.model.ShoppingCart;
 import com.electronicstore.springboot.model.ShoppingCartItem;
 import com.electronicstore.springboot.service.ShoppingCartService;
+import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -46,19 +47,27 @@ public class ShoppingCartController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    //TODO: non editable fields are ignored (json deserialization)
+    //TODO: ensure non editable fields are ignored
     @PostMapping
     public ResponseEntity<ShoppingCartResponse> createShoppingCart(@RequestBody ShoppingCartRequest request) {
         List<ShoppingCartItem> initialItems = Optional.ofNullable(request.getShoppingCartItems()).orElse(Collections.emptyList());
         ShoppingCart shoppingCart = new ShoppingCart(initialItems);
         shoppingCartService.createShoppingCart(shoppingCart);
+        Long id = shoppingCart.getId();
         URI uri = appContext.getBaseUriBuilder()
                 .pathSegment("shoppingCarts", "{id}")
-                .buildAndExpand(shoppingCart.getId())
+                .buildAndExpand(id)
                 .toUri();
-        return ResponseEntity.created(uri)
+        if (request.getResponseType() == ShoppingCart) {
+            ShoppingCart refreshShoppingCart = shoppingCartService.getShoppingCart(id).get();
+            ShoppingCartResponse response = new ShoppingCartResponse(refreshShoppingCart);
+            return ResponseEntity.created(uri).body(response);
+        } else {
+            return ResponseEntity.created(uri).build();
+        }
+        /*return ResponseEntity.created(uri)
                 //.header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .body(new ShoppingCartResponse(shoppingCart));
+                .body(new ShoppingCartResponse(shoppingCart));*/
     }
 
     //TODO: apply shopping cart ID to items in this context

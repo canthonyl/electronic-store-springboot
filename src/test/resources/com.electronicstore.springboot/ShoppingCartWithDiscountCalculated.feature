@@ -1,6 +1,5 @@
 Feature: Shopping cart with items have applicable discount applied to total
 
-  #TODO latest price applied to all shopping carts
   Background:
     Given the following product categories
       | Id | Name                |
@@ -65,3 +64,6 @@ Feature: Shopping cart with items have applicable discount applied to total
       | Total Amount Before Discount | 17978   |
       | Total Discount Amount        | 11625.8 |
       | Total Amount                 | 6352.2  |
+
+
+  #TODO multiple shopping carts created and price update applied to all shopping carts
