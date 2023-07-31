@@ -1,0 +1,22 @@
+{
+  "list": [
+    {
+      "name": "iPad Pro",
+      "description": "Apple iPad Pro",
+      "price": 8000.0,
+      "categoryId": 3
+    },
+    {
+      "name": "Apple Mac Pro",
+      "description": "Apple Desktop - Mac Pro",
+      "price": 20000.0,
+      "categoryId": 1
+    },
+    {
+      "name": "Macbook Air",
+      "description": "Apple Macbook Air",
+      "price": 10000.0,
+      "categoryId": 2
+    }
+  ]
+}

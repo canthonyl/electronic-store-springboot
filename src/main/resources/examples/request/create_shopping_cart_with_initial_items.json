@@ -1,0 +1,17 @@
+{
+  "responseType": "ShoppingCart",
+  "shoppingCartItems": [
+    {
+      "productId": 1,
+      "quantity": 1
+    },
+    {
+      "productId": 2,
+      "quantity": 1
+    },
+    {
+      "productId" : 3,
+      "quantity": 1
+    }
+  ]
+}

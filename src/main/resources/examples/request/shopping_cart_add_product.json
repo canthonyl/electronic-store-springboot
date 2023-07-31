@@ -1,0 +1,9 @@
+{
+  "shoppingCartItems": [
+    {
+      "shoppingCart": { "id": 1 },
+      "productId": 1,
+      "quantity": 1
+    }
+  ]
+}
