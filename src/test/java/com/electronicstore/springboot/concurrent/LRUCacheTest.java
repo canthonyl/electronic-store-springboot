@@ -58,7 +58,7 @@ public class LRUCacheTest {
         int numThreads = 10;
         int threadRunMs = 1000;
 
-        LRUCache lruCache = new LRUCache(lruCacheSize, evicted);
+        LRUCache lruCache = new LRUCache(lruCacheSize, evicted, new TestLock(true));
 
         Map<Long, ShoppingCart> carts = LongStream.rangeClosed(1, numShoppingCarts)
                 .mapToObj(ShoppingCart::new)

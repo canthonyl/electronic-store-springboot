@@ -5,10 +5,7 @@ import com.electronicstore.springboot.model.ShoppingCart;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 
@@ -18,14 +15,18 @@ public class LRUCache {
     final Map<Long, Entry> cacheMap;
     final Queue<ShoppingCart> evicted;
     final int maxSize;
-    final AtomicBooleanLock lock;
+    final OptimisticLock lock;
 
     public LRUCache(int capacity, Queue<ShoppingCart> queue) {
+        this(capacity, queue, new AtomicBooleanLock());
+    }
+
+    public LRUCache(int capacity, Queue<ShoppingCart> queue, OptimisticLock l){
         cache = new CircularQueue(capacity);
         cacheMap = new HashMap<>();
         evicted = queue;
         maxSize = capacity;
-        lock = new AtomicBooleanLock();
+        lock = l;
     }
 
     public Optional<ShoppingCart> get(Long id) {
@@ -57,6 +58,15 @@ public class LRUCache {
         }
     }
 
+    public List<ShoppingCart> values(){
+        try {
+            lock.acquire();
+            return cacheMap.values().stream().map(Entry::get).toList();
+        } finally {
+            lock.release();
+        }
+    }
+
     private void setFirst(Entry e) {
         if (e != cache.ref.get().next.get()) {
             if (cache.ref.get().next.get().previous.get() != e) {
@@ -75,23 +85,6 @@ public class LRUCache {
             }
             cache.ref.get().next.set(e);
         }
-        /*if (e != cache.ref.next) {
-            if (cache.ref.next.previous != e) {
-                if (e.previous == cache.ref.next) {
-                    Entry previous = cache.ref.next.previous;
-                    link(cache.ref.next, e.next);
-                    link(e, cache.ref.next);
-                    link(previous, e);
-                } else {
-                    link(e.previous, e.next);
-                    Entry next = cache.ref.next;
-                    Entry previous = next.previous;
-                    link(previous, e);
-                    link(e, next);
-                }
-            }
-            cache.ref.next = e;
-        }*/
     }
 
     private void link(Entry current, Entry next) {
@@ -127,13 +120,9 @@ public class LRUCache {
             Entry current = ref.get();
             for (int i=0; i<capacity; i++) {
                 Entry next = new Entry();
-                /*current.next.set(next);
-                next.previous.set(current);*/
                 link(current, next);
                 current = next;
             }
-            /*current.next.set(
-            current.next.previous = current;*/
             link(current, ref.get().next.get());
         }
     }

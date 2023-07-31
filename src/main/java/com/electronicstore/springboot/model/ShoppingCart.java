@@ -16,9 +16,6 @@ public class ShoppingCart {
     @SequenceGenerator(name = "shopping_cart_id_seq", sequenceName = "shopping_cart_id_seq", allocationSize = 1)
     private Long id;
 
-    /*@ElementCollection(fetch = FetchType.EAGER)
-    @CollectionTable(name = "shopping_cart_item")
-    private List<Item> items;*/
     @OneToMany(mappedBy="shoppingCart", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ShoppingCartItem> items;
 

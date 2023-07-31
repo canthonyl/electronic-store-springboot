@@ -32,7 +32,6 @@ public class ShoppingCartService {
     @Autowired
     private DealService dealService;
 
-
     private final LRUCache shoppingCartCache;
 
     private final Queue<ShoppingCart> evictedQueue;
@@ -67,6 +66,7 @@ public class ShoppingCartService {
     }
 
     public void refreshShoppingCart(ShoppingCart cart) {
+        System.out.println("refreshShoppingCart...");
         Map<Long, Product> products = productRepository.findAllById(cart.getItems().stream().map(ShoppingCartItem::getProductId).toList())
                 .stream().collect(toMap(Product::getId, Function.identity()));
 
@@ -124,15 +124,20 @@ public class ShoppingCartService {
     }
 
     public Optional<ShoppingCart> getShoppingCart(Long id) {
-        Optional<ShoppingCart> shoppingCart = shoppingCartRepository.findById(id);
-        if (shoppingCart.isPresent()) {
-            refreshShoppingCart(shoppingCart.get());
+        Optional<ShoppingCart> shoppingCart = shoppingCartCache.get(id);
+        if (shoppingCart.isEmpty()) {
+            shoppingCart = shoppingCartRepository.findById(id);
+            shoppingCart.ifPresent(c -> shoppingCartCache.put(id, c));
+        } else {
+            System.out.println("obtained from cache cart "+id+"...");
         }
+        shoppingCart.ifPresent(this::refreshShoppingCart);
         return shoppingCart;
     }
 
     public ShoppingCart createShoppingCart(ShoppingCart shoppingCart) {
         ShoppingCart cart = shoppingCartRepository.save(shoppingCart);
+        shoppingCartCache.put(cart.getId(), cart);
         return cart;
     }
 
@@ -149,10 +154,31 @@ public class ShoppingCartService {
         return Optional.empty();
     }
 
+    private void updateFromRepoToCache(Long id) {
+        shoppingCartRepository.findById(id).ifPresent(c -> {
+                refreshShoppingCart(c);
+                shoppingCartCache.put(id, c);
+            });
+    }
+
     public void addShoppingCartItems(Long cartId, List<ShoppingCartItem> items) {
+        //added here to test concurrency - start
+        /*ShoppingCart interimUpdate = shoppingCartCache.get(cartId).get();
+        long seq = 1;
+        for (ShoppingCartItem i : items){
+            i.setId(cartId*100000+(seq+=1L));//assign temp ids
+        }
+        interimUpdate.getItems().addAll(items);
+        refreshShoppingCart(interimUpdate);*/
+        //added here to test concurrency - end
+
         ShoppingCart cart = new ShoppingCart(cartId);
-        items.forEach(i -> i.setShoppingCart(cart));
+        items.forEach(i -> {
+            i.setShoppingCart(cart);
+            //i.setId(null); //unassign temp ids
+        });
         shoppingCartItemRepository.saveAll(items);
+        updateFromRepoToCache(cartId);
     }
 
     public void updateShoppingCartItems(Long cartId, Long itemId, ShoppingCartItem ShoppingCartItem) {
@@ -166,5 +192,10 @@ public class ShoppingCartService {
     public Queue<ShoppingCart> getEvictedQueue() {
         return evictedQueue;
     }
+
+    public void persistAll() {
+        shoppingCartRepository.saveAll(shoppingCartCache.values());
+    }
+
 
 }

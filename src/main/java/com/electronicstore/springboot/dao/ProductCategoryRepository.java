@@ -25,4 +25,8 @@ public interface ProductCategoryRepository extends JpaRepository<ProductCategory
 
     @Override
     void deleteAllById(Iterable<? extends Long> ids);
+
+    @Override
+    List<ProductCategory> findAll();
+
 }

@@ -63,8 +63,6 @@ public class DealService {
             }
         }
 
-        System.out.println("productIdToRuleGroups = "+productIdToRuleGroups);
-
         Map<Long, List<Long>> mapProductIdToCartItemId = request.getMapToCartItemId().get(DiscountRuleSetting.Group.product);
 
         DealMatchResponse response = new DealMatchResponse();
