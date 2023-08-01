@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -29,21 +30,20 @@ public class ProductController {
     private ProductService productService;
 
     //TODO investigate caching of requests
-    @GetMapping(path = "{id}")
+    @GetMapping(path="{id}", produces=MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Product> getProduct(@PathVariable Long id){
         return productService.getProduct(id)
                 .map(value -> ResponseEntity.ok().body(value))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @PostMapping
+    @PostMapping(produces=MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ProductResponse> addProducts(@Valid @RequestBody ProductRequest request){
         List<Product> products = productService.addProducts(request.getList());
-        String[] resourceList = products.stream().map(this::toResource).toArray(String[]::new);
 
         ProductResponse response = new ProductResponse(products);
         return ResponseEntity.accepted()
-                .header(HttpHeaders.LOCATION, resourceList)
+                .header(HttpHeaders.LOCATION, products.stream().map(this::toResource).toArray(String[]::new))
                 .body(response);
     }
 
@@ -55,20 +55,8 @@ public class ProductController {
     }
 
     private String toResource(Product product) {
-        return appContext.getBaseUriBuilder().pathSegment("products", String.valueOf(product.getId())).build().toUriString();
+        return appContext.getBaseUriBuilder().pathSegment("products", "{id}").build(product.getId()).toString();
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, "error:"+errorMessage);
-        });
-        return errors;
-    }
 
 }

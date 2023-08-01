@@ -49,7 +49,7 @@ public class TestApplicationConfig {
         loggingFilter.setIncludeClientInfo(true);
         loggingFilter.setIncludeQueryString(true);
         loggingFilter.setIncludePayload(true);
-        loggingFilter.setMaxPayloadLength(64000);
+        loggingFilter.setMaxPayloadLength(10000);
         return loggingFilter;
     }
 
