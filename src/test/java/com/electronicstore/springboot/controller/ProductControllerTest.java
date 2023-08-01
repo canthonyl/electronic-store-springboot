@@ -2,7 +2,6 @@ package com.electronicstore.springboot.controller;
 
 import com.electronicstore.springboot.context.CommonContext;
 import com.electronicstore.springboot.dto.ProductRequest;
-import com.electronicstore.springboot.fixture.Examples;
 import com.electronicstore.springboot.service.ProductService;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;
@@ -13,24 +12,20 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 
 import static com.electronicstore.springboot.fixture.Examples.*;
-import static net.bytebuddy.matcher.ElementMatchers.is;
-import static net.javacrumbs.jsonunit.JsonMatchers.*;
+import static net.javacrumbs.jsonunit.JsonMatchers.jsonNodePresent;
+import static net.javacrumbs.jsonunit.JsonMatchers.jsonPartEquals;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-
-//TODO Test Coverage Normal Http Status (Get=OK, Post/Delete=Accepted/Created)
 //TODO Test Coverage Non-normal http status (NotFound, BadRequest)
 @ActiveProfiles("test")
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
@@ -49,22 +44,22 @@ public class ProductControllerTest {
     private Gson gson = new Gson();
 
     @Test
-    public void httpGetProduct_validProductId_thenOKAndProductInResponse(){
+    public void httpGetProduct_returnsOK_productDetailsInResponseBody(){
         when(productService.getProduct(1L)).thenReturn(Optional.of(product1));
         when(productService.getProduct(2L)).thenReturn(Optional.of(product2));
         when(productService.getProduct(3L)).thenReturn(Optional.of(product3));
 
-        UriComponentsBuilder uri = appContext.getBaseUriBuilder().pathSegment("products","{id}");
+        String product1Url = productUrl(1L);
+        String product2Url = productUrl(2L);
+        String product3Url = productUrl(3L);
 
-        ResponseEntity<String> response1 = restTemplate.getForEntity(uri.buildAndExpand(1).toUriString(), String.class);
-        ResponseEntity<String> response2 = restTemplate.getForEntity(uri.buildAndExpand(2).toUriString(), String.class);
-        ResponseEntity<String> response3 = restTemplate.getForEntity(uri.buildAndExpand(3).toUriString(), String.class);
-        ResponseEntity<String> notFoundResponse4 = restTemplate.getForEntity(uri.buildAndExpand(4).toUriString(), String.class);
+        ResponseEntity<String> response1 = restTemplate.getForEntity(product1Url, String.class);
+        ResponseEntity<String> response2 = restTemplate.getForEntity(product2Url, String.class);
+        ResponseEntity<String> response3 = restTemplate.getForEntity(product3Url, String.class);
 
         assertEquals(HttpStatus.OK.value(), response1.getStatusCode().value());
         assertEquals(HttpStatus.OK.value(), response2.getStatusCode().value());
         assertEquals(HttpStatus.OK.value(), response3.getStatusCode().value());
-        assertEquals(HttpStatus.NOT_FOUND.value(), notFoundResponse4.getStatusCode().value());
 
         String json1 = response1.getBody();
         assertThat(json1, jsonPartEquals("id", product1.getId()));
@@ -89,44 +84,30 @@ public class ProductControllerTest {
     }
 
     @Test
-    public void httpGetProduct_invalidProductId_thenNotFound(){
+    public void httpGetProduct_returnNotFound(){
         when(productService.getProduct(1L)).thenReturn(Optional.empty());
-
-        UriComponentsBuilder uri = appContext.getBaseUriBuilder().pathSegment("products","{id}");
-
-        ResponseEntity<String> response1 = restTemplate.getForEntity(uri.buildAndExpand(1).toUriString(), String.class);
-
-        assertEquals(HttpStatus.NOT_FOUND.value(), response1.getStatusCode().value());
+        ResponseEntity<String> response = restTemplate.getForEntity(productUrl(1L), String.class);
+        assertEquals(HttpStatus.NOT_FOUND.value(), response.getStatusCode().value());
     }
 
     @Test
-    public void httpPostProduct(){
-        ProductRequest request = new ProductRequest(Arrays.asList(
-                Examples.ofProduct("Apple Macbook Pro", "Apple Macbook Pro", 11000, 2L),
-                Examples.ofProduct("Dell Desktop", "Dell Desktop", 5000, 1L),
-                Examples.ofProduct("Mechanical Keyboard", "Mechanical Keyboard", 678, 3L)
-        ));
-
-        UriComponentsBuilder uri = appContext.getBaseUriBuilder().pathSegment("products","{id}");
-        List<String> list = Arrays.asList(
-                uri.build(1).toString(),
-                uri.build(2).toString(),
-                uri.build(3).toString()
-        );
-
+    public void httpPostProduct_returnsAccepted_productDetailsInResponseBody(){
         when(productService.addProducts(anyList())).thenReturn(productList);
 
-        String json = gson.toJson(request);
         String productUri = appContext.getBaseUriBuilder().path("products").toUriString();
+        String json = gson.toJson(new ProductRequest(productList));
 
-        ResponseEntity<String> response = restTemplate.exchange(productUri, HttpMethod.POST, jsonRequest(json), String.class);
+        RequestEntity<String> request = RequestEntity.post(productUri).header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).body(json);
+        ResponseEntity<String> response = restTemplate.exchange(request, String.class);
+
+        HttpStatusCode responseStatus = response.getStatusCode();
+        assertEquals(HttpStatus.ACCEPTED.value(), responseStatus.value());
+
+        HttpHeaders httpHeaders = response.getHeaders();
+        List<String> locationList = httpHeaders.get(HttpHeaders.LOCATION);
+        assertEquals(productUrls(1L, 2L, 3L), locationList);
 
         String responseJson = response.getBody();
-        assertEquals(HttpStatus.ACCEPTED.value(), response.getStatusCode().value());
-        assertTrue(response.getHeaders().containsKey(HttpHeaders.LOCATION));
-        List<String> resultList = response.getHeaders().get(HttpHeaders.LOCATION);
-        assertEquals(list, resultList);
-
         assertThat(responseJson , jsonNodePresent("products[0]"));
         assertThat(responseJson , jsonNodePresent("products[1]"));
         assertThat(responseJson , jsonNodePresent("products[2]"));
@@ -152,11 +133,87 @@ public class ProductControllerTest {
         assertThat(responseJson , jsonPartEquals("products[2].categoryId", product3.getCategoryId()));
     }
 
-    private HttpEntity<String> jsonRequest(String requestJson) {
-        MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
-        headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        HttpEntity<String> requestEntity = new HttpEntity<>(requestJson, headers);
-        return requestEntity;
+    @Test
+    public void httpPostProduct_badRequest(){
+        String productUrl = appContext.getBaseUriBuilder().path("products").toUriString();
+
+        String empty = "";
+        String invalidJson = "hello world!";
+        String emptyObject = "{}";
+        String emptyRequest = "{ \"list\":[] }";
+        String missingFields = "{ \"list\":["+
+                    "{ \"name\": \"product1\"},"+
+                    "{ \"name\": \"product2\"},"+
+                    "{ \"name\": \"product3\"}"+
+                "] }";
+
+        RequestEntity<String> request;
+        ResponseEntity<String> response;
+        HttpStatusCode statusCode;
+
+        request = RequestEntity.post(productUrl).contentType(MediaType.APPLICATION_JSON).body(empty);
+        response = restTemplate.exchange(request, String.class);
+        statusCode = response.getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST.value(), statusCode.value());
+
+        request = RequestEntity.post(productUrl).contentType(MediaType.APPLICATION_JSON).body(invalidJson);
+        response = restTemplate.exchange(request, String.class);
+        statusCode = response.getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST.value(), statusCode.value());
+
+        request = RequestEntity.post(productUrl).contentType(MediaType.APPLICATION_JSON).body(emptyObject);
+        response = restTemplate.exchange(request, String.class);
+        statusCode = response.getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST.value(), statusCode.value());
+
+        request = RequestEntity.post(productUrl).contentType(MediaType.APPLICATION_JSON).body(emptyRequest);
+        response = restTemplate.exchange(request, String.class);
+        statusCode = response.getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST.value(), statusCode.value());
+
+        request = RequestEntity.post(productUrl).contentType(MediaType.APPLICATION_JSON).body(missingFields);
+        response = restTemplate.exchange(request, String.class);
+        statusCode = response.getStatusCode();
+        assertEquals(HttpStatus.BAD_REQUEST.value(), statusCode.value());
     }
+
+    @Test
+    public void httpDeleteProduct_returnsAccepted_deletedProductDetailInResponseBody(){
+        when(productService.removeProduct(1L)).thenReturn(Optional.of(product1));
+
+        RequestEntity<Void> request = RequestEntity.delete(productUrl(1L)).build();
+        ResponseEntity<String> response = restTemplate.exchange(request, String.class);
+
+        int responseCode  = response.getStatusCode().value();
+        assertEquals(HttpStatus.ACCEPTED.value(), responseCode);
+
+        String responseBody = response.getBody();
+        assertThat(responseBody , jsonNodePresent("id"));
+        assertThat(responseBody , jsonPartEquals("id", 1));
+    }
+
+    @Test
+    public void httpDeleteProduct_returnsNotFound(){
+        when(productService.removeProduct(1L)).thenReturn(Optional.empty());
+
+        RequestEntity<Void> request = RequestEntity.delete(productUrl(1L)).build();
+        ResponseEntity<String> response = restTemplate.exchange(request, String.class);
+
+        int responseCode  = response.getStatusCode().value();
+        assertEquals(HttpStatus.NOT_FOUND.value(), responseCode);
+    }
+
+
+    private String productUrl(Long id) {
+        return appContext.getBaseUriBuilder()
+                .pathSegment("products","{id}")
+                .build(id)
+                .toString();
+    }
+
+    private List<String> productUrls(Long... ids) {
+        return Arrays.stream(ids).map(this::productUrl).toList();
+    }
+
 
 }

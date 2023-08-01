@@ -30,5 +30,12 @@ public class ProductService {
         return product;
     }
 
+    /*
+    public List<Product> removeProducts(List<Long> productIds) {
+        List<Product> product = productRepository.findAllById(productIds);
+        productRepository.deleteAllById(productIds);
+        return product;
+    }*/
+
 
 }

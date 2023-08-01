@@ -16,6 +16,7 @@ import io.cucumber.java.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
+import org.springframework.http.client.support.HttpRequestWrapper;
 
 import static java.util.stream.Collectors.toMap;
 import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
@@ -24,6 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import javax.sql.DataSource;
 
+import java.net.URI;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -102,7 +104,7 @@ public class Steps {
     }
 
     @When("a POST request containing products is sent to {string}")
-    public void aPostRequestIsSentToProductsEndpoint(String resource) {
+    public void anHttpRequestWithBodyIsSent(String resource) {
         ProductRequest productRequest = new ProductRequest(scenarioContext.productDefinitionList);
         RequestEntity<String> request = RequestEntity.post(resource)
                 .contentType(MediaType.APPLICATION_JSON)
@@ -118,27 +120,29 @@ public class Steps {
     }*/
 
     @When("a {word} request is sent to {string}")
-    public void anHttpRequestWithoutBodyIsSentToEndpoint(String httpMethod, String resource) {
+    public void anHttpRequestIsSent(String httpMethod, String resource) {
         HttpEntity<String> emptyPostRequest = RequestEntity.post(resource).header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE).body("{}");
         switch(httpMethod) {
-            case "GET" -> scenarioContext.response = restTemplate.exchange(resource, GET, null, String.class);//scenarioContext.webTestClientResponse = scenarioContext.webTestClient.get().uri(resource).exchange();
-            case "POST" -> scenarioContext.response = restTemplate.exchange(resource, POST, emptyPostRequest, String.class);//scenarioContext.webTestClientResponse = scenarioContext.webTestClient.delete().uri(resource).exchange();
-            case "DELETE" -> scenarioContext.response = restTemplate.exchange(resource, DELETE, null, String.class);//scenarioContext.webTestClientResponse = scenarioContext.webTestClient.delete().uri(resource).exchange();
+            case "GET" -> scenarioContext.response = restTemplate.exchange(resource, GET, null, String.class);
+            case "POST" -> scenarioContext.response = restTemplate.exchange(resource, POST, emptyPostRequest, String.class);
+            case "DELETE" -> scenarioContext.response = restTemplate.exchange(resource, DELETE, null, String.class);
             default -> fail("TODO httpMethod "+httpMethod);
         }
     }
 
     @When("a {word} request is sent to {string} with body")
-    public void aPostRequestIsSentToProductsEndpoint(String httpMethodStr, String resource, String json) {
+    public void anHttpRequestWithBodyIsSent(String httpMethodStr, String resource, String json) {
         HttpMethod method = HttpMethod.valueOf(httpMethodStr);
-        RequestEntity<String> request = RequestEntity.post(resource)
+        RequestEntity<String> request = RequestEntity
+                .method(method, resource)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(json);
+
         scenarioContext.response = restTemplate.exchange(resource, method, request, String.class);
     }
 
     @Then("http status {word} is received")
-    public void httpStatusAcceptedIsReceived(String status) {
+    public void verifyHttpStatusReceived(String status) {
         HttpStatus httpStatus = HttpStatus.valueOf(status);
         //scenarioContext.webTestClientResponse.expectStatus().isEqualTo(HttpStatusCode.valueOf(httpStatus.value()));
         assertEquals(httpStatus.value(), scenarioContext.response.getStatusCode().value());
@@ -184,26 +188,6 @@ public class Steps {
     @Given("the following rule settings")
     public void setupRuleSetting(List<DiscountRuleSetting> rule){
         discountRuleSettingRepository.saveAll(rule);
-/*
-        List<DiscountRuleSetting> result1 = discountRuleSettingRepository.lookupRuleByCategoryOrProduct(
-                List.of(1L), Collections.emptyList()
-        );
-        List<DiscountRuleSetting> result2 = discountRuleSettingRepository.lookupRuleByCategoryOrProduct(
-                List.of(2L), Collections.emptyList()
-        );
-        List<DiscountRuleSetting> result3 = discountRuleSettingRepository.lookupRuleByCategoryOrProduct(
-                Collections.emptyList(), List.of(5L)
-        );
-
-        assertEquals(result1.get(0).getRuleId().longValue(), 1L);
-        assertEquals(result2.get(0).getRuleId().longValue(), 1L);
-        assertEquals(result3.get(0).getRuleId().longValue(), 1L);
-
-        List<DiscountRuleSetting> result4 = discountRuleSettingRepository.lookupRuleByCategoryOrProduct(
-                Collections.emptyList(), List.of(4L)
-        );
-
-        assertEquals(result4.get(0).getRuleId().longValue(), 2L);*/
     }
 
     @Given("an empty shopping cart with id {int} is created")

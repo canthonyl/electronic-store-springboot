@@ -2,6 +2,8 @@ package com.electronicstore.springboot.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 @Entity
 public class Product {
@@ -11,13 +13,16 @@ public class Product {
     @SequenceGenerator(name = "product_id_seq", sequenceName = "product_id_seq", allocationSize = 1)
     private Long id;
 
-    @NotBlank(message = "Product name cannot be blank")
+    @NotBlank(message = "Product name is required")
     private String name;
 
+    @NotBlank(message = "Description is required")
     private String description;
 
+    @Positive
     private Double price;
 
+    @NotNull(message = "Category ID is required")
     @Column(name = "category_id")
     private Long categoryId;
 
