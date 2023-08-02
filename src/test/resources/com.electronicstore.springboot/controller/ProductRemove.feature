@@ -14,11 +14,11 @@ Feature: Product can be removed using /products endpoint
 
   Scenario: Product can be removed by DELETE request to /products/id
     When a DELETE request is sent to "/products/1"
-    Then http status ACCEPTED is received
+    Then http status OK is received
     When a DELETE request is sent to "/products/2"
-    Then http status ACCEPTED is received
+    Then http status OK is received
     When a DELETE request is sent to "/products/3"
-    Then http status ACCEPTED is received
+    Then http status OK is received
     When a GET request is sent to "/products/1"
     Then http status NOT_FOUND is received
     When a GET request is sent to "/products/2"
@@ -28,7 +28,7 @@ Feature: Product can be removed using /products endpoint
 
   Scenario: Return not found status when non existent product is requested for deletion
     When a DELETE request is sent to "/products/1"
-    Then http status ACCEPTED is received
+    Then http status OK is received
     When a GET request is sent to "/products/1"
     Then http status NOT_FOUND is received
     When a DELETE request is sent to "/products/1"

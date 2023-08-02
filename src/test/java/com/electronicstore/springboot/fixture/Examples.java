@@ -36,28 +36,69 @@ public class Examples {
 
     public static ShoppingCart shoppingCart1 = new ShoppingCart(1L);
 
-    public static ShoppingCart shoppingCart2 = new ShoppingCart(2L);
+    public static ShoppingCart shoppingCart2WithProduct1 = new ShoppingCart(2L);
+    public static ShoppingCart shoppingCart2WithProduct12 = new ShoppingCart(2L);
+    public static ShoppingCart shoppingCart2WithProduct123 = new ShoppingCart(2L);
 
-    public static ShoppingCartItem predefinedItem1= new ShoppingCartItem();
+    public static ShoppingCartItem calculatedCart2Product1Qty1 = new ShoppingCartItem(2L, 1L, 1);
+    public static ShoppingCartItem calculatedCart2Product2Qty1 = new ShoppingCartItem(2L, 2L, 1);
+    public static ShoppingCartItem calculatedCart2Product3Qty1 = new ShoppingCartItem(2L, 3L, 1);
+
+    public static ShoppingCart shoppingCart2WithProduct1Request = new ShoppingCart(2L);
+    public static ShoppingCart shoppingCart2WithProduct12Request = new ShoppingCart(2L);
+    public static ShoppingCart shoppingCart2WithProduct123Request = new ShoppingCart(2L);
+
+    public static ShoppingCartItem cart2Product1Qty1Request = new ShoppingCartItem(2L, 1L, 1);
+    public static ShoppingCartItem cart2Product2Qty1Request = new ShoppingCartItem(2L, 2L, 1);
+    public static ShoppingCartItem cart2Product3Qty1Request = new ShoppingCartItem(2L, 3L, 1);
+
 
     static {
-        predefinedItem1.setId(1L);
-        predefinedItem1.setShoppingCart(shoppingCart1);
-        predefinedItem1.setProductId(1L);
+        /*ShoppingCartItem itemWithCalculation = new ShoppingCartItem();
+        itemWithCalculation.setId(1L);
+        itemWithCalculation.setShoppingCart(shoppingCart2WithProduct1);
+        itemWithCalculation.setProductId(product1.getId());
+        itemWithCalculation.setQuantity(1);
+        itemWithCalculation.setPrice(11000);
+        itemWithCalculation.setAmountBeforeDiscount(11000);
+        itemWithCalculation.setDiscountAmount(2000);
+        itemWithCalculation.setAmount(9000);*/
+        //shoppingCart2WithProduct1.setItems(List.of(itemWithCalculation));
 
-        ShoppingCartItem cart2Item1 = new ShoppingCartItem();
-        cart2Item1.setId(1L);
-        cart2Item1.setShoppingCart(shoppingCart2);
-        cart2Item1.setQuantity(1);
-        cart2Item1.setPrice(11000);
-        cart2Item1.setAmountBeforeDiscount(11000);
-        cart2Item1.setDiscountAmount(2000);
-        cart2Item1.setAmount(9000);
-        cart2Item1.setProductId(product1.getId());
+        shoppingCart2WithProduct1Request.setItems(List.of(cart2Product1Qty1Request));
+        shoppingCart2WithProduct12Request.setItems(List.of(cart2Product1Qty1Request, cart2Product2Qty1Request));
+        shoppingCart2WithProduct123Request.setItems(List.of(cart2Product1Qty1Request, cart2Product2Qty1Request, cart2Product3Qty1Request));
 
-        shoppingCart2.setItems(List.of(cart2Item1));
+        calculatedCart2Product1Qty1.setPrice(11000);
+        calculatedCart2Product1Qty1.setAmountBeforeDiscount(11000);
+        calculatedCart2Product1Qty1.setDiscountAmount(2000);
+        calculatedCart2Product1Qty1.setAmount(9000);
+
+        calculatedCart2Product2Qty1.setPrice(600);
+        calculatedCart2Product2Qty1.setAmountBeforeDiscount(600);
+        calculatedCart2Product2Qty1.setDiscountAmount(100);
+        calculatedCart2Product2Qty1.setAmount(500);
+
+        calculatedCart2Product3Qty1.setPrice(500);
+        calculatedCart2Product3Qty1.setAmountBeforeDiscount(500);
+        calculatedCart2Product3Qty1.setDiscountAmount(100);
+        calculatedCart2Product3Qty1.setAmount(400);
+
+        shoppingCart2WithProduct1.setItems(List.of(calculatedCart2Product1Qty1));
+        shoppingCart2WithProduct1.setTotalAmountBeforeDiscount(11000);
+        shoppingCart2WithProduct1.setTotalDiscountAmount(2000);
+        shoppingCart2WithProduct1.setTotalAmount(9000);
+
+        shoppingCart2WithProduct12.setItems(List.of(calculatedCart2Product1Qty1, calculatedCart2Product2Qty1));
+        shoppingCart2WithProduct12.setTotalAmountBeforeDiscount(11600);
+        shoppingCart2WithProduct12.setTotalDiscountAmount(2100);
+        shoppingCart2WithProduct12.setTotalAmount(9500);
+
+        shoppingCart2WithProduct123.setItems(List.of(calculatedCart2Product1Qty1, calculatedCart2Product2Qty1, calculatedCart2Product3Qty1));
+        shoppingCart2WithProduct123.setTotalAmountBeforeDiscount(12100);
+        shoppingCart2WithProduct123.setTotalDiscountAmount(2200);
+        shoppingCart2WithProduct123.setTotalAmount(9900);
     }
 
-    public static List<ShoppingCartItem> shoppingCart2Items = List.of(predefinedItem1);
 
 }

@@ -26,7 +26,6 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-//TODO Test Coverage Non-normal http status (NotFound, BadRequest)
 @ActiveProfiles("test")
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -101,7 +100,7 @@ public class ProductControllerTest {
         ResponseEntity<String> response = restTemplate.exchange(request, String.class);
 
         HttpStatusCode responseStatus = response.getStatusCode();
-        assertEquals(HttpStatus.ACCEPTED.value(), responseStatus.value());
+        assertEquals(HttpStatus.OK.value(), responseStatus.value());
 
         HttpHeaders httpHeaders = response.getHeaders();
         List<String> locationList = httpHeaders.get(HttpHeaders.LOCATION);
@@ -185,11 +184,13 @@ public class ProductControllerTest {
         ResponseEntity<String> response = restTemplate.exchange(request, String.class);
 
         int responseCode  = response.getStatusCode().value();
-        assertEquals(HttpStatus.ACCEPTED.value(), responseCode);
+        assertEquals(HttpStatus.OK.value(), responseCode);
 
         String responseBody = response.getBody();
         assertThat(responseBody , jsonNodePresent("id"));
+        assertThat(responseBody , jsonNodePresent("name"));
         assertThat(responseBody , jsonPartEquals("id", 1));
+        assertThat(responseBody , jsonPartEquals("name", "Apple Macbook Pro"));
     }
 
     @Test

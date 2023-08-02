@@ -142,8 +142,10 @@ public class ShoppingCartService {
     }
 
     public Optional<ShoppingCartItem> getShoppingCartItem(Long cartId, Long itemId) {
-        return getShoppingCart(cartId)
-                .flatMap(s -> s.getItems().stream().filter(i -> i.getId().equals(itemId)).findFirst());
+        /*return getShoppingCart(cartId)
+                .flatMap(s -> s.getItems().stream().filter(i -> i.getId().equals(itemId)).findFirst());*/
+        return shoppingCartItemRepository.lookupShoppingCartItemById(cartId, itemId).stream().findFirst();
+
     }
 
     public Optional<ShoppingCart> replaceShoppingCart(Long cartId, ShoppingCart cart) {
@@ -181,8 +183,8 @@ public class ShoppingCartService {
         updateFromRepoToCache(cartId);
     }
 
-    public void updateShoppingCartItems(Long cartId, Long itemId, ShoppingCartItem ShoppingCartItem) {
-
+    public void updateShoppingCartItems(ShoppingCartItem item) {
+        shoppingCartItemRepository.save(item);
     }
 
     public LRUCache getShoppingCartCache() {
@@ -197,5 +199,16 @@ public class ShoppingCartService {
         shoppingCartRepository.saveAll(shoppingCartCache.values());
     }
 
+    public Optional<ShoppingCart> removeShoppingCart(Long cartId) {
+        return Optional.empty();
+    }
+
+    public Optional<ShoppingCartItem> removeShoppingCartItem(Long cartId, Long itemId) {
+        Optional<ShoppingCartItem> item = getShoppingCartItem(cartId, itemId);
+        if (item.isPresent()) {
+            shoppingCartItemRepository.deleteById(itemId);
+        }
+        return item;
+    }
 
 }

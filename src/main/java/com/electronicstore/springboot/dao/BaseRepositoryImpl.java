@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 //TODO resolve could not initialize proxy - no Session (related?)
 public class BaseRepositoryImpl<E, ID> extends SimpleJpaRepository<E, ID> implements BaseRepository<E, ID> {
 
-    private EntityManager manager;
+    protected EntityManager manager;
 
     public BaseRepositoryImpl(JpaEntityInformation entityInformation, EntityManager entityManager) {
         super(entityInformation, entityManager);
