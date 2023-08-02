@@ -6,11 +6,11 @@
       "quantity": 1
     },
     {
-      "productId": 2,
+      "productId": 3,
       "quantity": 1
     },
     {
-      "productId" : 3,
+      "productId" : 5,
       "quantity": 1
     }
   ]

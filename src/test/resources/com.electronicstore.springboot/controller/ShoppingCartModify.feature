@@ -96,5 +96,102 @@ Feature: Items can be added, updated or removed from shopping carts
       """
 
   Scenario: Updated quantity for items
+    Given a shopping cart with id 1 is created with the following items
+      | Product Id | Quantity |
+      | 1          | 1        |
+      | 3          | 1        |
+      | 5          | 1        |
+    When a GET request is sent to "/shoppingCarts/1"
+    Then http status OK is received
+    And the following response body
+    """json
+      {
+        "id": 1,
+        "totalAmountBeforeDiscount": 14276.0,
+        "totalDiscountAmount" : 0.0,
+        "totalAmount" : 14276.0,
+        "items": [
+          {
+            "id": 1,
+            "productId": 1,
+            "quantity": 1,
+            "price": 11000.0,
+            "amountBeforeDiscount": 11000.0,
+            "discountAmount": 0.0,
+            "amount": 11000.0,
+            "discountApplied": []
+          },
+          {
+            "id": 2,
+            "productId": 3,
+            "quantity": 1,
+            "price": 1678.0,
+            "amountBeforeDiscount": 1678.0,
+            "discountAmount": 0.0,
+            "amount": 1678.0,
+            "discountApplied": []
+          },
+          {
+            "id": 3,
+            "productId": 5,
+            "quantity": 1,
+            "price": 1598.0,
+            "amountBeforeDiscount": 1598.0,
+            "discountAmount": 0.0,
+            "amount": 1598.0,
+            "discountApplied": []
+          }
+        ]
+      }
+    """
+    When a PUT request is sent to "/shoppingCarts/1/items/1?quantity=2"
+    Then http status NO_CONTENT is received
+    When a PUT request is sent to "/shoppingCarts/1/items/2?quantity=2"
+    Then http status NO_CONTENT is received
+    When a PUT request is sent to "/shoppingCarts/1/items/3?quantity=2"
+    Then http status NO_CONTENT is received
+    When a GET request is sent to "/shoppingCarts/1"
+    Then http status OK is received
+    And the following response body
+      """json
+        {
+          "id": 1,
+          "totalAmountBeforeDiscount": 28552.0,
+          "totalDiscountAmount" : 6299.0,
+          "totalAmount" : 22253.0,
+          "items": [
+            {
+              "id": 1,
+              "productId": 1,
+              "quantity": 2,
+              "price": 11000.0,
+              "amountBeforeDiscount": 22000.0,
+              "discountAmount": 5500.0,
+              "amount": 16500.0,
+              "discountApplied": ["Buy 1 get 50% off the second"]
+            },
+            {
+              "id": 2,
+              "productId": 3,
+              "quantity": 2,
+              "price": 1678.0,
+              "amountBeforeDiscount": 3356.0,
+              "discountAmount": 0.0,
+              "amount": 3356.0,
+              "discountApplied": []
+            },
+            {
+              "id": 3,
+              "productId": 5,
+              "quantity": 2,
+              "price": 1598.0,
+              "amountBeforeDiscount": 3196.0,
+              "discountAmount": 799.0,
+              "amount": 2397.0,
+              "discountApplied": ["Buy 1 get 50% off the second"]
+            }
+          ]
+        }
+      """
 
   Scenario: Items removed from cart
