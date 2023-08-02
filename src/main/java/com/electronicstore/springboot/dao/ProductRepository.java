@@ -34,4 +34,6 @@ public interface ProductRepository extends JpaRepository<Product, Long>, BaseRep
     @Override
     void deleteAllById(Iterable<? extends Long> ids);
 
+    Object removeByName(String name);
+
 }

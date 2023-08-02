@@ -8,10 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -155,4 +152,95 @@ public class ShoppingCartDataStoreTest {
         assertEquals(1, map.get(4L).getQuantity());*/
     }
 
+    @Test
+    public void testDeleteCascadeItems(){
+        productRepository.save(Examples.product1);
+        productRepository.save(Examples.product2);
+        productRepository.save(Examples.product3);
+
+        ShoppingCart shoppingCart = new ShoppingCart(List.of(
+                new ShoppingCartItem(1L, 1),
+                new ShoppingCartItem(2L, 2),
+                new ShoppingCartItem(3L, 3)
+        ));
+
+        cartRepository.save(shoppingCart);
+        assertEquals(1L, shoppingCart.getId());
+        assertEquals(1L, shoppingCart.getItems().get(0).getId());
+        assertEquals(2L, shoppingCart.getItems().get(1).getId());
+        assertEquals(3L, shoppingCart.getItems().get(2).getId());
+
+        cartRepository.deleteById(1L);
+        Optional<ShoppingCart> findCartId1 = cartRepository.findById(1L);
+        Optional<ShoppingCartItem> findCartItemId1 = cartItemRepository.findById(1L);
+        Optional<ShoppingCartItem> findCartItemId2 = cartItemRepository.findById(2L);
+        Optional<ShoppingCartItem> findCartItemId3 = cartItemRepository.findById(3L);
+
+        assertEquals(false, findCartId1.isPresent());
+        assertEquals(false, findCartItemId1.isPresent());
+        assertEquals(false, findCartItemId2.isPresent());
+        assertEquals(false, findCartItemId3.isPresent());
+    }
+
+    @Test
+    public void testDeleteSingleItem(){
+        productRepository.save(Examples.product1);
+        productRepository.save(Examples.product2);
+        productRepository.save(Examples.product3);
+
+        assertEquals(false, cartItemRepository.findById(1L).isPresent());
+
+        ShoppingCart cart = new ShoppingCart();
+        cart.setItems(List.of(
+                new ShoppingCartItem(1L, 1),
+                new ShoppingCartItem(2L, 1),
+                new ShoppingCartItem(3L, 1)
+        ));
+        ShoppingCart result = cartRepository.save(cart);
+        assertEquals(1L, result.getId());
+        assertEquals(1L, result.getItems().get(0).getId());
+        assertEquals(2L, result.getItems().get(1).getId());
+
+        assertEquals(true, cartItemRepository.findById(1L).isPresent());
+        assertEquals(true, cartItemRepository.findById(2L).isPresent());
+        assertEquals(true, cartItemRepository.findById(3L).isPresent());
+
+        cartItemRepository.deleteById(2L);
+        assertEquals(true, cartItemRepository.findById(1L).isPresent());
+        assertEquals(false, cartItemRepository.findById(2L).isPresent());
+        assertEquals(true, cartItemRepository.findById(3L).isPresent());
+
+        /*productRepository.save(Examples.product1);
+        productRepository.save(Examples.product2);
+        productRepository.save(Examples.product3);
+
+        ShoppingCart shoppingCart = new ShoppingCart(List.of(
+                new ShoppingCartItem(1L, 1),
+                new ShoppingCartItem(2L, 2),
+                new ShoppingCartItem(3L, 3)
+        ));
+
+        cartRepository.save(shoppingCart);
+        assertEquals(1L, shoppingCart.getId());
+        assertEquals(1L, shoppingCart.getItems().get(0).getId());
+        assertEquals(2L, shoppingCart.getItems().get(1).getId());
+        assertEquals(3L, shoppingCart.getItems().get(2).getId());
+
+        List<ShoppingCartItem> result = cartItemRepository.lookupShoppingCartItemById(1L, 2L);
+        assertEquals(1, result.size());
+        assertEquals(2L, result.get(0).getId());
+
+        cartItemRepository.deleteById(2L);
+        //cartItemRepository.flush();
+        Optional<ShoppingCartItem> findCartItemId2 = cartItemRepository.findById(2L);
+
+        assertEquals(false, findCartItemId2.isPresent());*/
+    }
+
+
+
+    @Test
+    public void testUpdateItems(){
+
+    }
 }

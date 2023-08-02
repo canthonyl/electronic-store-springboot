@@ -1,6 +1,8 @@
 package com.electronicstore.springboot.dto;
 
 import com.electronicstore.springboot.model.ShoppingCartItem;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
@@ -13,7 +15,8 @@ public class ShoppingCartRequest {
 
     private ResponseType responseType;
 
-    private List<ShoppingCartItem> shoppingCartItems;
+    @NotEmpty
+    private List<@Valid ShoppingCartItem> shoppingCartItems;
 
     public ShoppingCartRequest() {
         responseType = Auto;

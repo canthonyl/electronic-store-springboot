@@ -1,4 +1,4 @@
-Feature: Products can be added and removed to shopping cart
+Feature: Items can be added, updated or removed from shopping carts
 
   Background:
     Given the following product categories
@@ -10,20 +10,20 @@ Feature: Products can be added and removed to shopping cart
       | Id | Name                | Description                | Price    | Category Id |
       | 1  | Macbook pro         | Apple Macbook pro          | 11000.00 | 2           |
       | 2  | Dell Desktop        | Dell Desktop i5            | 5000.00  | 1           |
-      | 3  | Mechanical Keyboard | Mechanical Keyboard Clicky | 1678.00   | 3           |
+      | 3  | Mechanical Keyboard | Mechanical Keyboard Clicky | 1678.00  | 3           |
       | 4  | iPad Pro            | Apple iPad Pro             | 8000.00  | 3           |
-      | 5  | Bluetooth Mouse     | Logitech bluetooth mouse   | 1598.00   | 3           |
+      | 5  | Bluetooth Mouse     | Logitech bluetooth mouse   | 1598.00  | 3           |
     And the following discount rules
       | Id | Description                  | Threshold Unit Type | Threshold Unit | Applicable Unit Type | Applicable Unit | Applicable Discount | Override Amount | Rule Group Id |
       | 1  | Buy 1 get 50% off the second | Qty                 | 2              | Qty                  | 1               | 0.5                 | 0.0             | 1             |
       | 2  | Buy 3 get 60% off all 3      | Qty                 | 3              | Qty                  | 3               | 0.6                 | 0.0             | 1             |
       | 3  | Buy 5 get 70% off all 5      | Qty                 | 5              | Qty                  | 5               | 0.7                 | 0.0             | 1             |
     And the following rule settings
-      | Id |  Category Id | Product Id | Rule Group Id |
-      | 1  |  1           |            | 1             |
-      | 2  |  2           |            | 1             |
-      | 3  |              | 5          | 1             |
-      | 4  |              | 4          | 1             |
+      | Id | Category Id | Product Id | Rule Group Id |
+      | 1  | 1           |            | 1             |
+      | 2  | 2           |            | 1             |
+      | 3  |             | 5          | 1             |
+      | 4  |             | 4          | 1             |
 
   Scenario: Products are added to shopping cart and latest discount and total amount evaluated
     When a POST request is sent to "/shoppingCarts"
@@ -50,7 +50,7 @@ Feature: Products can be added and removed to shopping cart
           ]
         }
       """
-    Then http status ACCEPTED is received
+    Then http status OK is received
     And the following response body
       """json
         {
@@ -78,7 +78,7 @@ Feature: Products can be added and removed to shopping cart
                 "amountBeforeDiscount": 3356.0,
                 "discountAmount": 0.0,
                 "amount": 3356.0,
-                "discountApplied": null
+                "discountApplied": []
               },
               {
                 "id": 3,
@@ -95,3 +95,6 @@ Feature: Products can be added and removed to shopping cart
         }
       """
 
+  Scenario: Updated quantity for items
+
+  Scenario: Items removed from cart

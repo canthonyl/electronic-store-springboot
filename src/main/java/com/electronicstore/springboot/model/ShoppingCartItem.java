@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Positive;
 
+import java.util.LinkedList;
 import java.util.List;
 
 //TODO Lombok @NoArgsConstructor
@@ -20,29 +22,13 @@ public class ShoppingCartItem {
     @SequenceGenerator(name = "shopping_cart_item_id_seq", sequenceName = "shopping_cart_item_id_seq", allocationSize = 1)
     private Long id;
 
-    /*@Column(table = "shopping_cart_item", name = "shopping_cart_id")
-    private Long shoppingCartId;*/
     @ManyToOne
     private ShoppingCart shoppingCart;
 
-    public ShoppingCart getShoppingCart() {
-        return shoppingCart;
-    }
-
-    public void setShoppingCart(ShoppingCart shoppingCart) {
-        this.shoppingCart = shoppingCart;
-    }
-
+    @Positive
     private Long productId;
 
-    public Long getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Long productId) {
-        this.productId = productId;
-    }
-
+    @Positive
     private int quantity;
 
     private double price;
@@ -56,6 +42,7 @@ public class ShoppingCartItem {
     private transient List<String> discountApplied;
 
     public ShoppingCartItem() {
+        discountApplied = new LinkedList<>();
     }
 
     public ShoppingCartItem(Long productId, int quantity) {
@@ -64,23 +51,26 @@ public class ShoppingCartItem {
     }
 
     public ShoppingCartItem(Long shoppingCartId, Long productId, int quantity) {
-        //this(new ShoppingCart(shoppingCartId), new Product(productId), quantity);
         this.shoppingCart = new ShoppingCart(shoppingCartId);
         this.productId = productId;
         this.quantity = quantity;
     }
 
-    /*public ShoppingCartItem(ShoppingCart cart, Product product, int quantity) {
-        this.shoppingCart = cart;
-        this.product = product;
-        this.quantity = quantity;
-    }*/
+    public ShoppingCart getShoppingCart() {
+        return shoppingCart;
+    }
 
-    /*public ShoppingCartItem(Long id, Long shoppingCartId, Long productId) {
-        this.id = id;
-        //this.shoppingCartId = shoppingCartId;
-        this.product = new Product(productId);
-    }*/
+    public void setShoppingCart(ShoppingCart shoppingCart) {
+        this.shoppingCart = shoppingCart;
+    }
+
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
 
     public Long getId() {
         return id;
@@ -89,16 +79,6 @@ public class ShoppingCartItem {
     public void setId(Long id) {
         this.id = id;
     }
-
-    /*public Long getShoppingCartId() {
-        return shoppingCartId;
-    }
-
-    public void setShoppingCartId(Long shoppingCartId) {
-        this.shoppingCartId = shoppingCartId;
-    }*/
-
-
 
     public int getQuantity() {
         return quantity;

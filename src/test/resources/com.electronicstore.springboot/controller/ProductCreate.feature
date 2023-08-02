@@ -14,7 +14,7 @@ Feature: Create and view products via products endpoint
       | Dell Desktop        | Dell Desktop i5            | 5000  | 1           |
       | Mechanical Keyboard | Mechanical Keyboard Clicky | 116   | 3           |
     When a POST request containing products is sent to "/products"
-    Then http status ACCEPTED is received
+    Then http status OK is received
     And "Location" in Http Header contains the following values
       | http://localhost:8090/products/1 |
       | http://localhost:8090/products/2 |
