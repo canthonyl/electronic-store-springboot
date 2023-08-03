@@ -1,9 +1,6 @@
 package com.electronicstore.springboot.concurrent;
 
-import com.electronicstore.springboot.dao.ShoppingCartRepository;
 import com.electronicstore.springboot.model.ShoppingCart;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;

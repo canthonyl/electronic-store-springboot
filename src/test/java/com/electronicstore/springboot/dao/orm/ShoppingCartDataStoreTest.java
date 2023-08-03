@@ -1,21 +1,20 @@
-package com.electronicstore.springboot.dao;
+package com.electronicstore.springboot.dao.orm;
 
 import com.electronicstore.springboot.fixture.Examples;
 import com.electronicstore.springboot.model.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import jakarta.persistence.EntityManager;
 
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-@ActiveProfiles("test")
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ShoppingCartDataStoreTest {
@@ -28,6 +27,9 @@ public class ShoppingCartDataStoreTest {
 
     @Autowired
     ProductRepository productRepository;
+
+    //@Autowired
+    //PersistenceManagedTypes persistenceManagedTypes;
 
     @Test
     public void testSaveShoppingCartReturnsUniqueIdentifier(){
@@ -188,6 +190,8 @@ public class ShoppingCartDataStoreTest {
         productRepository.save(Examples.product2);
         productRepository.save(Examples.product3);
 
+        //EntityManager cartEntityManager = cartRepository.getEntityManager();
+
         assertEquals(false, cartItemRepository.findById(1L).isPresent());
 
         ShoppingCart cart = new ShoppingCart();
@@ -196,10 +200,13 @@ public class ShoppingCartDataStoreTest {
                 new ShoppingCartItem(2L, 1),
                 new ShoppingCartItem(3L, 1)
         ));
-        ShoppingCart result = cartRepository.save(cart);
-        assertEquals(1L, result.getId());
-        assertEquals(1L, result.getItems().get(0).getId());
-        assertEquals(2L, result.getItems().get(1).getId());
+
+        cartRepository.save(cart);
+        //cartRepository.flush();
+        assertEquals(1L, cart.getId());
+        assertEquals(1L, cart.getItems().get(0).getId());
+        assertEquals(2L, cart.getItems().get(1).getId());
+        assertEquals(3L, cart.getItems().get(2).getId());
 
         assertEquals(true, cartItemRepository.findById(1L).isPresent());
         assertEquals(true, cartItemRepository.findById(2L).isPresent());
@@ -210,31 +217,12 @@ public class ShoppingCartDataStoreTest {
         assertEquals(false, cartItemRepository.findById(2L).isPresent());
         assertEquals(true, cartItemRepository.findById(3L).isPresent());
 
-        /*productRepository.save(Examples.product1);
-        productRepository.save(Examples.product2);
-        productRepository.save(Examples.product3);
+        //cartEntityManager.refresh(cart);
+        //assertEquals(2, cart.getItems().size());
 
-        ShoppingCart shoppingCart = new ShoppingCart(List.of(
-                new ShoppingCartItem(1L, 1),
-                new ShoppingCartItem(2L, 2),
-                new ShoppingCartItem(3L, 3)
-        ));
+        //ShoppingCart cart1 = cartRepository.findById(1L).get();
+        //assertEquals(2, cart1.getItems().size());
 
-        cartRepository.save(shoppingCart);
-        assertEquals(1L, shoppingCart.getId());
-        assertEquals(1L, shoppingCart.getItems().get(0).getId());
-        assertEquals(2L, shoppingCart.getItems().get(1).getId());
-        assertEquals(3L, shoppingCart.getItems().get(2).getId());
-
-        List<ShoppingCartItem> result = cartItemRepository.lookupShoppingCartItemById(1L, 2L);
-        assertEquals(1, result.size());
-        assertEquals(2L, result.get(0).getId());
-
-        cartItemRepository.deleteById(2L);
-        //cartItemRepository.flush();
-        Optional<ShoppingCartItem> findCartItemId2 = cartItemRepository.findById(2L);
-
-        assertEquals(false, findCartItemId2.isPresent());*/
     }
 
 

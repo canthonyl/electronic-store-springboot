@@ -1,7 +1,7 @@
-package com.electronicstore.springboot.dao.test;
+package com.electronicstore.springboot.dao.orm.test;
 
-import com.electronicstore.springboot.dao.test.test.CartItemRepository;
-import com.electronicstore.springboot.dao.test.test.CartRepository;
+import com.electronicstore.springboot.dao.orm.test.test.CartItemRepository;
+import com.electronicstore.springboot.dao.orm.test.test.CartRepository;
 import com.electronicstore.springboot.model.test.Cart;
 import com.electronicstore.springboot.model.test.CartItem;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,7 +1,7 @@
 package com.electronicstore.springboot.fixture.steps;
 
 import com.electronicstore.springboot.context.CommonContext;
-import com.electronicstore.springboot.dao.*;
+import com.electronicstore.springboot.dao.orm.*;
 import com.electronicstore.springboot.dto.ProductRequest;
 import com.electronicstore.springboot.fixture.ScenarioContext;
 import com.electronicstore.springboot.model.*;
@@ -16,7 +16,6 @@ import io.cucumber.java.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.*;
-import org.springframework.http.client.support.HttpRequestWrapper;
 
 import static java.util.stream.Collectors.toMap;
 import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
@@ -25,7 +24,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 import javax.sql.DataSource;
 
-import java.net.URI;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;

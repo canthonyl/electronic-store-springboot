@@ -1,9 +1,9 @@
 package com.electronicstore.springboot.service;
 
 import com.electronicstore.springboot.concurrent.LRUCache;
-import com.electronicstore.springboot.dao.ProductRepository;
-import com.electronicstore.springboot.dao.ShoppingCartItemRepository;
-import com.electronicstore.springboot.dao.ShoppingCartRepository;
+import com.electronicstore.springboot.dao.orm.ProductRepository;
+import com.electronicstore.springboot.dao.orm.ShoppingCartItemRepository;
+import com.electronicstore.springboot.dao.orm.ShoppingCartRepository;
 import com.electronicstore.springboot.dto.DealMatchRequest;
 import com.electronicstore.springboot.dto.DealMatchResponse;
 import com.electronicstore.springboot.model.*;
@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 
@@ -138,7 +137,7 @@ public class ShoppingCartService {
 
     public ShoppingCart createShoppingCart(ShoppingCart shoppingCart) {
         ShoppingCart cart = shoppingCartRepository.save(shoppingCart);
-        shoppingCartCache.put(cart.getId(), cart);
+        //shoppingCartCache.put(cart.getId(), cart);
         return cart;
     }
 
@@ -176,12 +175,9 @@ public class ShoppingCartService {
         //added here to test concurrency - end
 
         ShoppingCart cart = new ShoppingCart(cartId);
-        items.forEach(i -> {
-            i.setShoppingCart(cart);
-            //i.setId(null); //unassign temp ids
-        });
+        items.forEach(i -> i.setShoppingCart(cart));
         shoppingCartItemRepository.saveAll(items);
-        updateFromRepoToCache(cartId);
+        //updateFromRepoToCache(cartId);
     }
 
     //TODO refresh simple calculation

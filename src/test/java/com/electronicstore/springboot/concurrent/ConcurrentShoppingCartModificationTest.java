@@ -1,10 +1,8 @@
 package com.electronicstore.springboot.concurrent;
 
-import com.electronicstore.springboot.dao.ProductCategoryRepository;
-import com.electronicstore.springboot.dao.ProductRepository;
-import com.electronicstore.springboot.dao.ShoppingCartRepository;
-import com.electronicstore.springboot.dto.DealMatchResponse;
-import com.electronicstore.springboot.model.DiscountRule;
+import com.electronicstore.springboot.dao.orm.ProductCategoryRepository;
+import com.electronicstore.springboot.dao.orm.ProductRepository;
+import com.electronicstore.springboot.dao.orm.ShoppingCartRepository;
 import com.electronicstore.springboot.model.Product;
 import com.electronicstore.springboot.model.ShoppingCart;
 import com.electronicstore.springboot.model.ShoppingCartItem;
@@ -18,11 +16,9 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.*;
 import static java.util.stream.Collectors.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;

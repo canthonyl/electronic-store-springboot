@@ -1,5 +1,6 @@
-package com.electronicstore.springboot.dao;
+package com.electronicstore.springboot.dao.orm;
 
+import com.electronicstore.springboot.dao.ProductDatastore;
 import com.electronicstore.springboot.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -11,7 +12,9 @@ import java.util.Optional;
 @Repository
 //@Cacheable
 @Transactional
-public interface ProductRepository extends JpaRepository<Product, Long>, BaseRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>
+        , ProductDatastore
+{
 
     @Override
     <S extends Product> S save(S product);
@@ -34,6 +37,5 @@ public interface ProductRepository extends JpaRepository<Product, Long>, BaseRep
     @Override
     void deleteAllById(Iterable<? extends Long> ids);
 
-    Object removeByName(String name);
 
 }

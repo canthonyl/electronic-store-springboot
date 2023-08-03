@@ -1,8 +1,8 @@
 package com.electronicstore.springboot.service;
 
-import com.electronicstore.springboot.dao.DiscountRuleRepository;
-import com.electronicstore.springboot.dao.DiscountRuleSettingRepository;
-import com.electronicstore.springboot.dao.ProductRepository;
+import com.electronicstore.springboot.dao.orm.DiscountRuleRepository;
+import com.electronicstore.springboot.dao.orm.DiscountRuleSettingRepository;
+import com.electronicstore.springboot.dao.orm.ProductRepository;
 import com.electronicstore.springboot.dto.DealMatchRequest;
 import com.electronicstore.springboot.dto.DealMatchResponse;
 import com.electronicstore.springboot.model.DiscountRule;
