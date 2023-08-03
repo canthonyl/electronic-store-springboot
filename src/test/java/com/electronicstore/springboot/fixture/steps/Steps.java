@@ -126,6 +126,7 @@ public class Steps {
             case "GET" -> scenarioContext.response = restTemplate.exchange(resource, GET, null, String.class);
             case "POST" -> scenarioContext.response = restTemplate.exchange(resource, POST, emptyPostRequest, String.class);
             case "DELETE" -> scenarioContext.response = restTemplate.exchange(resource, DELETE, null, String.class);
+            case "PUT" -> scenarioContext.response = restTemplate.exchange(resource, PUT, null, String.class);
             default -> fail("TODO httpMethod "+httpMethod);
         }
     }

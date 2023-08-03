@@ -124,13 +124,14 @@ public class ShoppingCartService {
     }
 
     public Optional<ShoppingCart> getShoppingCart(Long id) {
-        Optional<ShoppingCart> shoppingCart = shoppingCartCache.get(id);
+        /*Optional<ShoppingCart> shoppingCart = shoppingCartCache.get(id);
         if (shoppingCart.isEmpty()) {
             shoppingCart = shoppingCartRepository.findById(id);
             shoppingCart.ifPresent(c -> shoppingCartCache.put(id, c));
         } else {
             System.out.println("obtained from cache cart "+id+"...");
-        }
+        }*/
+        Optional<ShoppingCart> shoppingCart = shoppingCartRepository.findById(id);
         shoppingCart.ifPresent(this::refreshShoppingCart);
         return shoppingCart;
     }
@@ -183,6 +184,7 @@ public class ShoppingCartService {
         updateFromRepoToCache(cartId);
     }
 
+    //TODO refresh simple calculation
     public void updateShoppingCartItems(ShoppingCartItem item) {
         shoppingCartItemRepository.save(item);
     }
