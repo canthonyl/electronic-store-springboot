@@ -1,6 +1,10 @@
-package com.electronicstore.springboot.fixture;
+package com.electronicstore.springboot.context;
 
+import com.electronicstore.springboot.dao.ProductDatastore;
+import com.electronicstore.springboot.dao.jdbc.ProductDatastoreJdbc;
 import com.electronicstore.springboot.dao.orm.BaseRepositoryImpl;
+import com.electronicstore.springboot.dao.orm.ProductRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,49 +12,28 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.web.filter.CommonsRequestLoggingFilter;
 
 import javax.sql.DataSource;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.H2;
 
-@Profile("test")
+//TODO dev profile
+//TODO enable logging of orm mapping
+//TODO applicable managed entity manager for concurrency
+@Profile("data.orm")
 @Configuration
-@EnableJpaRepositories(
-        basePackages = {"com.electronicstore.springboot"}
-        , repositoryBaseClass = BaseRepositoryImpl.class
-        //, transactionManagerRef = "transactionManager"
-)
+@EnableJpaRepositories(basePackages = "com.electronicstore.springboot", repositoryBaseClass = BaseRepositoryImpl.class)
 @EntityScan(basePackages = {"com.electronicstore.springboot.model"})
 @EnableTransactionManagement
-public class TestApplicationConfig {
+public class JpaHibernateH2Config {
+
+    @Autowired
+    private ProductRepository productRepository;
 
     @Bean
-    public DataSource dataSource(){
-        return new EmbeddedDatabaseBuilder()
-                .generateUniqueName(true)
-                .setType(H2)
-                .setScriptEncoding("UTF-8")
-                .ignoreFailedDrops(true)
-                //.addScript("schema.sql")
-                .build();
+    public ProductDatastore productDatastore(){
+        return productRepository;
     }
-
-    @Bean
-    public CommonsRequestLoggingFilter requestLoggingFilter() {
-        CommonsRequestLoggingFilter loggingFilter = new CommonsRequestLoggingFilter();
-        loggingFilter.setIncludeClientInfo(true);
-        loggingFilter.setIncludeQueryString(true);
-        loggingFilter.setIncludePayload(true);
-        loggingFilter.setMaxPayloadLength(10000);
-        return loggingFilter;
-    }
-
-    /*@Bean
-    public PlatformTransactionManager transactionManager() {
-        return new DataSourceTransactionManager(dataSource());
-    }*/
-
 
     /*@Bean
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
@@ -63,16 +46,32 @@ public class TestApplicationConfig {
         factory.setJpaVendorAdapter(vendorAdapter);
         factory.setPackagesToScan("com.electronicstore.springboot.model");
         factory.setDataSource(dataSource());
-        return factory;
-    }*/
 
-    /*@Bean
+        return factory;
+    }
+
+    @Bean
     public PlatformTransactionManager transactionManager(EntityManagerFactory entityManagerFactory) {
 
         JpaTransactionManager txManager = new JpaTransactionManager();
         txManager.setEntityManagerFactory(entityManagerFactory);
         return txManager;
-    }
-    */
+    }*/
+
+    //TODO enable transaction management
+    /*@Bean
+    public PlatformTransactionManager txManager() {
+        return new DataSourceTransactionManager(dataSource());
+    }*/
+
+    /*@Bean
+    public SecurityWebFilterChain securityWebFilterChain(
+            ServerHttpSecurity http) {
+        return http.authorizeExchange()
+                .pathMatchers("/actuator/**").permitAll()
+                .anyExchange().authenticated()
+                .and().build();
+    }*/
+
 
 }

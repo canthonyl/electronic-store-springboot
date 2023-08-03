@@ -5,15 +5,16 @@ import com.electronicstore.springboot.model.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.orm.jpa.persistenceunit.PersistenceManagedTypes;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import jakarta.persistence.EntityManager;
 
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-@ActiveProfiles("test")
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ShoppingCartDataStoreTest {
@@ -26,6 +27,9 @@ public class ShoppingCartDataStoreTest {
 
     @Autowired
     ProductRepository productRepository;
+
+    //@Autowired
+    //PersistenceManagedTypes persistenceManagedTypes;
 
     @Test
     public void testSaveShoppingCartReturnsUniqueIdentifier(){
@@ -186,6 +190,8 @@ public class ShoppingCartDataStoreTest {
         productRepository.save(Examples.product2);
         productRepository.save(Examples.product3);
 
+        //EntityManager cartEntityManager = cartRepository.getEntityManager();
+
         assertEquals(false, cartItemRepository.findById(1L).isPresent());
 
         ShoppingCart cart = new ShoppingCart();
@@ -211,9 +217,11 @@ public class ShoppingCartDataStoreTest {
         assertEquals(false, cartItemRepository.findById(2L).isPresent());
         assertEquals(true, cartItemRepository.findById(3L).isPresent());
 
+        //cartEntityManager.refresh(cart);
+        //assertEquals(2, cart.getItems().size());
+
         //ShoppingCart cart1 = cartRepository.findById(1L).get();
         //assertEquals(2, cart1.getItems().size());
-
 
     }
 

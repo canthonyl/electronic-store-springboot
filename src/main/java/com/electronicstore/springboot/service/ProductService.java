@@ -1,5 +1,6 @@
 package com.electronicstore.springboot.service;
 
+import com.electronicstore.springboot.dao.ProductDatastore;
 import com.electronicstore.springboot.dao.orm.ProductRepository;
 import com.electronicstore.springboot.model.Product;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,20 +13,21 @@ import java.util.Optional;
 public class ProductService {
 
     @Autowired
-    private ProductRepository productRepository;
+    //private ProductRepository productRepository;
+    private ProductDatastore productDatastore;
 
     public Optional<Product> getProduct(Long id) {
-        return productRepository.findById(id);
+        return productDatastore.findById(id);
     }
 
     public List<Product> addProducts(List<Product> list) {
-        return productRepository.saveAll(list);
+        return productDatastore.saveAll(list);
     }
 
     public Optional<Product> removeProduct(Long id) {
-        Optional<Product> product = productRepository.findById(id);
+        Optional<Product> product = productDatastore.findById(id);
         if (product.isPresent()) {
-            productRepository.deleteById(id);
+            productDatastore.deleteById(id);
         }
         return product;
     }

@@ -65,5 +65,5 @@ Feature: Shopping cart with items have applicable discount applied to total
       | Total Discount Amount        | 11625.8 |
       | Total Amount                 | 6352.2  |
 
-
+  Scenario: Test Scenario
   #TODO multiple shopping carts created and price update applied to all shopping carts
