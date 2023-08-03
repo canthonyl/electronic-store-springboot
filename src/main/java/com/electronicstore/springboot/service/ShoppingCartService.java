@@ -138,7 +138,7 @@ public class ShoppingCartService {
 
     public ShoppingCart createShoppingCart(ShoppingCart shoppingCart) {
         ShoppingCart cart = shoppingCartRepository.save(shoppingCart);
-        shoppingCartCache.put(cart.getId(), cart);
+        //shoppingCartCache.put(cart.getId(), cart);
         return cart;
     }
 
@@ -176,12 +176,9 @@ public class ShoppingCartService {
         //added here to test concurrency - end
 
         ShoppingCart cart = new ShoppingCart(cartId);
-        items.forEach(i -> {
-            i.setShoppingCart(cart);
-            //i.setId(null); //unassign temp ids
-        });
+        items.forEach(i -> i.setShoppingCart(cart));
         shoppingCartItemRepository.saveAll(items);
-        updateFromRepoToCache(cartId);
+        //updateFromRepoToCache(cartId);
     }
 
     //TODO refresh simple calculation
