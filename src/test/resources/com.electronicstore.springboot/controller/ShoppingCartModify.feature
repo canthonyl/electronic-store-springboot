@@ -25,7 +25,7 @@ Feature: Items can be added, updated or removed from shopping carts
       | 3  |             | 5          | 1             |
       | 4  |             | 4          | 1             |
 
-  Scenario: Products are added to shopping cart and latest discount and total amount evaluated
+  Scenario: Products are added to shopping cart and discount and total amount evaluated
     When a POST request is sent to "/shoppingCarts"
     Then http status CREATED is received
     And "Location" in Http Header contains the following values
@@ -95,7 +95,7 @@ Feature: Items can be added, updated or removed from shopping carts
         }
       """
 
-  Scenario: Updated quantity for items
+  Scenario: Shopping cart returns up-to-date quantities and deals applied
     Given a shopping cart with id 1 is created with the following items
       | Product Id | Quantity |
       | 1          | 1        |
@@ -194,4 +194,39 @@ Feature: Items can be added, updated or removed from shopping carts
         }
       """
 
-  Scenario: Items removed from cart
+  Scenario: Shopping cart total amounts and item list reflect item removed
+    #Given a shopping cart with id 1 is created with the following items
+    #  | Product Id | Quantity |
+    #  | 1          | 2        |
+    #  | 3          | 2        |
+    #  | 5          | 2        |
+    When a POST request is sent to "/shoppingCarts"
+    Then http status CREATED is received
+    When a POST request is sent to "/shoppingCarts/1/items" with body
+      """json
+        {
+          "responseType": "ShoppingCart",
+          "shoppingCartItems" : [
+            {
+              "productId" : 1,
+              "quantity" : 2
+            },
+            {
+              "productId" : 3,
+              "quantity" : 2
+            },
+            {
+              "productId" : 5,
+              "quantity" : 2
+            }
+          ]
+        }
+      """
+    Then http status OK is received
+    When a DELETE request is sent to "/shoppingCarts/1/items/2"
+    Then http status NO_CONTENT is received
+    When a GET request is sent to "/shoppingCarts/1"
+    Then http status OK is received
+    #And the following response body
+      #"""json
+      #"""

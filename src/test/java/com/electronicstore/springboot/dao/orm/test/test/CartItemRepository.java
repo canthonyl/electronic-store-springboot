@@ -1,6 +1,5 @@
-package com.electronicstore.springboot.dao.test.test;
+package com.electronicstore.springboot.dao.orm.test.test;
 
-import com.electronicstore.springboot.dao.BaseRepository;
 import com.electronicstore.springboot.model.test.CartItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -9,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface CartItemRepository extends JpaRepository<CartItem, Long>, BaseRepository<CartItem, Long> {
+public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
     @Override
     Optional<CartItem> findById(Long id);

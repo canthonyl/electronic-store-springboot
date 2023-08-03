@@ -1,6 +1,6 @@
 package com.electronicstore.springboot.service;
 
-import com.electronicstore.springboot.dao.ProductRepository;
+import com.electronicstore.springboot.dao.orm.ProductRepository;
 import com.electronicstore.springboot.model.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

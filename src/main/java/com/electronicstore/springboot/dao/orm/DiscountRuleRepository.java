@@ -1,4 +1,4 @@
-package com.electronicstore.springboot.dao;
+package com.electronicstore.springboot.dao.orm;
 
 import com.electronicstore.springboot.model.DiscountRule;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface DiscountRuleRepository extends JpaRepository<DiscountRule, Long>, BaseRepository<DiscountRule, Long> {
+public interface DiscountRuleRepository extends JpaRepository<DiscountRule, Long> {
 
     @Override
     Optional<DiscountRule> findById(Long id);

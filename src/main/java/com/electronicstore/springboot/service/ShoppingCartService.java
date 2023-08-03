@@ -1,9 +1,9 @@
 package com.electronicstore.springboot.service;
 
 import com.electronicstore.springboot.concurrent.LRUCache;
-import com.electronicstore.springboot.dao.ProductRepository;
-import com.electronicstore.springboot.dao.ShoppingCartItemRepository;
-import com.electronicstore.springboot.dao.ShoppingCartRepository;
+import com.electronicstore.springboot.dao.orm.ProductRepository;
+import com.electronicstore.springboot.dao.orm.ShoppingCartItemRepository;
+import com.electronicstore.springboot.dao.orm.ShoppingCartRepository;
 import com.electronicstore.springboot.dto.DealMatchRequest;
 import com.electronicstore.springboot.dto.DealMatchResponse;
 import com.electronicstore.springboot.model.*;
@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 

@@ -1,6 +1,6 @@
 package com.electronicstore.springboot.context;
 
-import com.electronicstore.springboot.dao.BaseRepositoryImpl;
+import com.electronicstore.springboot.dao.orm.BaseRepositoryImpl;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

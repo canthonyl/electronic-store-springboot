@@ -1,12 +1,11 @@
-package com.electronicstore.springboot.dao;
+package com.electronicstore.springboot.dao.orm;
 
 import jakarta.persistence.EntityManager;
 import org.springframework.data.jpa.repository.support.JpaEntityInformation;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-//TODO resolve could not initialize proxy - no Session (related?)
-public class BaseRepositoryImpl<E, ID> extends SimpleJpaRepository<E, ID> implements BaseRepository<E, ID> {
+public class BaseRepositoryImpl<E, ID> extends SimpleJpaRepository<E, ID>{
 
     protected EntityManager manager;
 
@@ -16,9 +15,8 @@ public class BaseRepositoryImpl<E, ID> extends SimpleJpaRepository<E, ID> implem
     }
 
     @Override
-    @Transactional
-    public void refresh(E e) {
-        manager.refresh(e);
+    public void deleteById(ID id) {
+        super.deleteById(id);
     }
 
 }
