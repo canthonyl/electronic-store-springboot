@@ -195,38 +195,86 @@ Feature: Items can be added, updated or removed from shopping carts
       """
 
   Scenario: Shopping cart total amounts and item list reflect item removed
-    #Given a shopping cart with id 1 is created with the following items
-    #  | Product Id | Quantity |
-    #  | 1          | 2        |
-    #  | 3          | 2        |
-    #  | 5          | 2        |
-    When a POST request is sent to "/shoppingCarts"
-    Then http status CREATED is received
-    When a POST request is sent to "/shoppingCarts/1/items" with body
-      """json
-        {
-          "responseType": "ShoppingCart",
-          "shoppingCartItems" : [
-            {
-              "productId" : 1,
-              "quantity" : 2
-            },
-            {
-              "productId" : 3,
-              "quantity" : 2
-            },
-            {
-              "productId" : 5,
-              "quantity" : 2
-            }
-          ]
-        }
-      """
+    Given a shopping cart with id 1 is created with the following items
+      | Product Id | Quantity |
+      | 1          | 2        |
+      | 3          | 2        |
+      | 5          | 2        |
+    When a GET request is sent to "/shoppingCarts/1"
     Then http status OK is received
+    And the following response body
+    """json
+      {
+        "id": 1,
+        "totalAmountBeforeDiscount": 28552.0,
+        "totalDiscountAmount" : 6299.0,
+        "totalAmount" : 22253.0,
+        "items": [
+          {
+            "id": 1,
+            "productId": 1,
+            "quantity": 2,
+            "price": 11000.0,
+            "amountBeforeDiscount": 22000.0,
+            "discountAmount": 5500.0,
+            "amount": 16500.0,
+            "discountApplied": ["Buy 1 get 50% off the second"]
+          },
+          {
+            "id": 2,
+            "productId": 3,
+            "quantity": 2,
+            "price": 1678.0,
+            "amountBeforeDiscount": 3356.0,
+            "discountAmount": 0.0,
+            "amount": 3356.0,
+            "discountApplied": []
+          },
+          {
+            "id": 3,
+            "productId": 5,
+            "quantity": 2,
+            "price": 1598.0,
+            "amountBeforeDiscount": 3196.0,
+            "discountAmount": 799.0,
+            "amount": 2397.0,
+            "discountApplied": ["Buy 1 get 50% off the second"]
+          }
+        ]
+      }
+    """
     When a DELETE request is sent to "/shoppingCarts/1/items/2"
     Then http status NO_CONTENT is received
     When a GET request is sent to "/shoppingCarts/1"
     Then http status OK is received
-    #And the following response body
-      #"""json
-      #"""
+    And the following response body
+      """json
+      {
+        "id": 1,
+        "totalAmountBeforeDiscount": 25196.0,
+        "totalDiscountAmount" : 6299.0,
+        "totalAmount" : 18897.0,
+        "items": [
+          {
+            "id": 1,
+            "productId": 1,
+            "quantity": 2,
+            "price": 11000.0,
+            "amountBeforeDiscount": 22000.0,
+            "discountAmount": 5500.0,
+            "amount": 16500.0,
+            "discountApplied": ["Buy 1 get 50% off the second"]
+          },
+          {
+            "id": 3,
+            "productId": 5,
+            "quantity": 2,
+            "price": 1598.0,
+            "amountBeforeDiscount": 3196.0,
+            "discountAmount": 799.0,
+            "amount": 2397.0,
+            "discountApplied": ["Buy 1 get 50% off the second"]
+          }
+        ]
+      }
+      """

@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ShoppingCartItemRepository extends JpaRepository<ShoppingCartItem, Long> {
+public interface ShoppingCartItemJpaRepository extends JpaRepository<ShoppingCartItem, Long> {
 
     @Override
     Optional<ShoppingCartItem> findById(Long id);

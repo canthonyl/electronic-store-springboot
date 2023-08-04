@@ -1,17 +1,29 @@
 package com.electronicstore.springboot.concurrent;
 
-import com.electronicstore.springboot.concurrent.LRUCache;
 import com.electronicstore.springboot.model.ShoppingCart;
 import org.junit.jupiter.api.Test;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Random;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
 public class LRUCacheTest {
 
@@ -58,7 +70,7 @@ public class LRUCacheTest {
         int numThreads = 10;
         int threadRunMs = 1000;
 
-        LRUCache lruCache = new LRUCache(lruCacheSize, evicted, new TestLock(true));
+        LRUCache lruCache = new LRUCache(lruCacheSize, evicted, new ConfigurableLock(true));
 
         Map<Long, ShoppingCart> carts = LongStream.rangeClosed(1, numShoppingCarts)
                 .mapToObj(ShoppingCart::new)

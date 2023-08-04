@@ -9,19 +9,24 @@ import java.lang.reflect.Field;
 @Component
 public class BeanPostProcessListener implements BeanPostProcessor {
 
+
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        if (bean.getClass().getPackageName().equals("com.electronicstore.springboot.service")) {
-            System.out.println("bean " + beanName + " after initialization:");
-            System.out.println("   name=" + beanName);
-            System.out.println("   package=" + bean.getClass().getPackageName());
-            System.out.println("   class=" + bean.getClass().getSimpleName());
+        //replace with logging
+        if (bean.getClass().getPackageName().equals("com.electronicstore.springboot.service")
+            || bean.getClass().getSimpleName().startsWith("EntityDatastore")) {
+            //System.out.println("bean " + beanName + " after initialization:");
+            //System.out.println("   name=" + beanName);
+            //System.out.println("   package=" + bean.getClass().getPackageName());
+            //System.out.println("   class=" + bean.getClass().getSimpleName());
             for (Field field : bean.getClass().getDeclaredFields()) {
                 try {
                     field.setAccessible(true);
                     Object fieldInstance = field.get(bean);
-                    System.out.println("   field=" + field.getName());
-                    System.out.println("         package=" + fieldInstance.getClass().getPackageName());
-                    System.out.println("         class=" + fieldInstance.getClass().getSimpleName());
+                    //System.out.println("   field=" + field.getName());
+                    if (fieldInstance == null) {
+                        //System.out.println("         package=" + fieldInstance.getClass().getPackageName());
+                        //System.out.println("         class=" + fieldInstance.getClass().getSimpleName());
+                    }
                 } catch (IllegalAccessException e) {
                     throw new RuntimeException(e);
                 }

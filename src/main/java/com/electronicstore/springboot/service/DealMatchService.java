@@ -1,8 +1,6 @@
 package com.electronicstore.springboot.service;
 
-import com.electronicstore.springboot.dao.orm.DiscountRuleRepository;
-import com.electronicstore.springboot.dao.orm.DiscountRuleSettingRepository;
-import com.electronicstore.springboot.dao.orm.ProductRepository;
+import com.electronicstore.springboot.dao.EntityDatastore;
 import com.electronicstore.springboot.dto.DealMatchRequest;
 import com.electronicstore.springboot.dto.DealMatchResponse;
 import com.electronicstore.springboot.model.DiscountRule;
@@ -11,36 +9,80 @@ import com.electronicstore.springboot.model.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toSet;
 
 @Service
-public class DealService {
+public class DealMatchService {
 
     @Autowired
-    private DiscountRuleSettingRepository ruleSettingRepository;
+    private EntityDatastore<DiscountRuleSetting> discountRuleSettingDatastore;
 
     @Autowired
-    private DiscountRuleRepository ruleRepository;
+    private EntityDatastore<DiscountRule> discountRuleDatastore;
 
     @Autowired
-    private ProductRepository productRepository;
+    private ProductService productService;
 
+    //private Map<Long, FreeProductRule> freeProductRules;
 
+    public DealMatchService(){
+        /*freeProductRules = new HashMap<>();
+        FreeProductRule freeProductRule1 = new FreeProductRule();
+        freeProductRule1.setTriggerProducts(Set.of(1L, 2L));
+        freeProductRule1.setFreeProducts(Set.of(3L));
+        freeProductRules.put(1L, freeProductRule1);*/
+    }
+
+    public List<DiscountRuleSetting> lookupRuleByCategoryOrProduct(Collection<Long> catId, Collection<Long> productId) {
+        Map<String, Collection> criteria = new HashMap<>();
+        if (catId.size()>0) {
+            criteria.put("category_id", catId);
+        }
+        if (productId.size()>0) {
+            criteria.put("product_id", productId);
+        }
+        if (criteria.size()>0) {
+            return discountRuleSettingDatastore.findMatchingValuesIn(criteria);
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    public List<DiscountRule> lookupRuleByGroupId(Collection<Long> ruleGroupId) {
+        if (ruleGroupId.size()>0) {
+            return discountRuleDatastore.findMatchingValuesIn("rule_group_id", ruleGroupId);
+        } else {
+            return Collections.emptyList();
+        }
+    }
 
     public DealMatchResponse matchDeals(DealMatchRequest request) {
 
         Set<Long> catId = request.getCharacteristic().get(DiscountRuleSetting.Group.category).keySet();
         Set<Long> productId = request.getCharacteristic().get(DiscountRuleSetting.Group.product).keySet();
-        Map<Long, Product> productById = productRepository.findAllById(productId).stream().collect(toMap(Product::getId, Function.identity()));
+        Map<Long, Product> productById = productService.getProducts(productId).stream().collect(toMap(Product::getId, Function.identity()));
         Map<Long, Set<Long>> productByCatId = productById.values().stream().collect(groupingBy(Product::getCategoryId, mapping(Product::getId, toSet())));
         Map<Long, Map<DiscountRule.ThresholdType, Double>> characteristicsByProductId = request.getCharacteristic().get(DiscountRuleSetting.Group.product);
 
-        List<DiscountRuleSetting> applicableRuleSettings = ruleSettingRepository.lookupRuleByCategoryOrProduct(catId, productId);
+        List<DiscountRuleSetting> applicableRuleSettings = lookupRuleByCategoryOrProduct(catId, productId);
 
-        Map<Long, DiscountRule> applicableRules = ruleRepository.lookupRuleByGroupId(applicableRuleSettings.stream()
+        Map<Long, DiscountRule> applicableRules = lookupRuleByGroupId(applicableRuleSettings.stream()
                 .map(DiscountRuleSetting::getRuleGroupId).distinct().collect(toList()))
                 .stream().collect(toMap(DiscountRule::getId, Function.identity()));
 
@@ -48,6 +90,26 @@ public class DealService {
                 .collect(groupingBy(DiscountRule::getRuleGroupId, mapping(Function.identity(), toList())));
 
         Map<Long, Set<Long>> productIdToRuleGroups = new HashMap<>();
+
+        /*Map<Long, List<Long>> productIdToItems = request.getMapToCartItemId().get(DiscountRuleSetting.Group.product);
+        Map<Long, List<Long>> workingProductIdToItems = new HashMap<>();
+        productIdToItems.forEach((id, list) -> {
+            workingProductIdToItems.put(id, new LinkedList<>(list));
+        });
+
+        Map<Long, List<Long>> freeItemIdListByProduct = new HashMap<>();
+        for (FreeProductRule rule : freeProductRules.values()) {
+            if (productId.containsAll(rule.getTriggerProducts())) {
+                Set<Long> freeProducts = rule.getFreeProducts();
+                for (Long freeProductId : freeProducts) {
+                    List<Long> itemList = workingProductIdToItems.get(freeProductId);
+                    freeItemIdListByProduct.computeIfAbsent(freeProductId, i->new LinkedList<>())
+                            .add(itemList.remove(0));
+                }
+            }
+        }*/
+
+
 
         for (DiscountRuleSetting setting : applicableRuleSettings) {
             Long ruleGroupId = setting.getRuleGroupId();
@@ -63,9 +125,24 @@ public class DealService {
             }
         }
 
+
+
         Map<Long, List<Long>> mapProductIdToCartItemId = request.getMapToCartItemId().get(DiscountRuleSetting.Group.product);
 
         DealMatchResponse response = new DealMatchResponse();
+
+        /*Map<Long, Double> discountAmounts = response.getItemsDiscountAmount();
+        for (Long freeProduct : freeItemIdListByProduct.keySet()) {
+            List<Long> relatedProductIds = freeItemIdListByProduct.get(freeProduct);
+            Double totalAmount = characteristicsByProductId.get(freeProduct).get(DiscountRule.ThresholdType.Amount);
+            Double quantity = characteristicsByProductId.get(freeProduct).get(DiscountRule.ThresholdType.Qty);
+            Double amountBeforeDiscount = totalAmount / quantity;
+            for (Long itemId : relatedProductIds) {
+                discountAmounts.put(itemId, totalAmount);
+            }
+
+        }*/
+
 
         for (Map.Entry<Long, Set<Long>> e : productIdToRuleGroups.entrySet()) {
             Product product = productById.get(e.getKey());

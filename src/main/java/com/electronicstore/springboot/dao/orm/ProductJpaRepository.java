@@ -1,6 +1,7 @@
 package com.electronicstore.springboot.dao.orm;
 
-import com.electronicstore.springboot.dao.ProductDatastore;
+import com.electronicstore.springboot.dao.Datastore;
+import com.electronicstore.springboot.dao.EntityRepository;
 import com.electronicstore.springboot.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,8 +13,7 @@ import java.util.Optional;
 @Repository
 //@Cacheable
 @Transactional
-public interface ProductRepository extends JpaRepository<Product, Long>
-        , ProductDatastore
+public interface ProductJpaRepository extends JpaRepository<Product, Long>
 {
 
     @Override

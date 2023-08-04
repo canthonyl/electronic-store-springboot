@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface ShoppingCartRepository extends JpaRepository<ShoppingCart, Long> {
+public interface ShoppingCartJpaRepository extends JpaRepository<ShoppingCart, Long> {
 
     @Override
     boolean existsById(Long id);

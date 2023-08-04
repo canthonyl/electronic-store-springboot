@@ -20,12 +20,12 @@ create sequence discount_rule_id_seq as bigint;
 create sequence discount_rule_setting_id_seq as bigint;
 
 create table product_category (
-     id bigint primary key,
+     id bigint default(next value for product_category_id_seq) default on null primary key,
      name varchar(255) not null
 );
 
 create table product (
-     id bigint primary key,
+     id bigint default(next value for product_id_seq) default on null primary key,
      category_id bigint not null,
      name varchar(255) not null,
      description varchar(255),
@@ -35,7 +35,7 @@ create table product (
 
 --TODO persist calculation
 create table shopping_cart (
-     id bigint primary key
+     id bigint default(next value for shopping_cart_id_seq) default on null primary key
 );
 
 create table shopping_cart_item (
@@ -52,7 +52,7 @@ create table shopping_cart_item (
 );
 
 create table discount_rule(
-    id bigint primary key,
+    id bigint default(next value for discount_rule_id_seq) default on null primary key,
     threshold_unit bigint,
     threshold_unit_type enum('Qty','Amount') not null,
     applicable_unit bigint,
@@ -65,7 +65,7 @@ create table discount_rule(
 
 --TODO index for lookup
 create table discount_rule_setting(
-    id bigint primary key,
+    id bigint default(next value for discount_rule_setting_id_seq) default on null primary key,
     rule_group_id bigint not null,
     category_id bigint,
     product_id bigint,

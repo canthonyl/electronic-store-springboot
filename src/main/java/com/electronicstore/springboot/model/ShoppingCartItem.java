@@ -3,41 +3,69 @@ package com.electronicstore.springboot.model;
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.validation.constraints.Positive;
 
 import java.util.LinkedList;
 import java.util.List;
 
-//TODO Lombok @NoArgsConstructor
-//TODO @GetterAndSetter
-
 @Entity
 @JsonIdentityInfo(generator= ObjectIdGenerators.PropertyGenerator.class, property="id")
-@JsonIgnoreProperties({"shoppingCart"})
+@JsonIgnoreProperties({"shoppingCartId"})
 public class ShoppingCartItem {
+
+    public static ShoppingCartItem ofShoppingCart(Long id) {
+        ShoppingCartItem item = new ShoppingCartItem();
+        item.setShoppingCartId(id);
+        return item;
+    }
+
+    public static ShoppingCartItem ofProduct(Long productId, Integer quantity) {
+        ShoppingCartItem item = new ShoppingCartItem();
+        item.setProductId(productId);
+        item.setQuantity(quantity);
+        return item;
+    }
+
+    public static ShoppingCartItem ofProductWithDiscount(Long shoppingCartId, Long productId, Integer quantity, Double price, Double amountBeforeDiscount, Double discountAmount, Double amount) {
+        ShoppingCartItem item = new ShoppingCartItem();
+
+        item.setProductId(productId);
+        item.setQuantity(quantity);
+        item.setPrice(price);
+        item.setAmountBeforeDiscount(amountBeforeDiscount);
+        item.setDiscountAmount(discountAmount);
+        item.setAmount(amount);
+        return item;
+    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "shopping_cart_item_id_seq")
     @SequenceGenerator(name = "shopping_cart_item_id_seq", sequenceName = "shopping_cart_item_id_seq", allocationSize = 1)
     private Long id;
 
-    @ManyToOne
-    private ShoppingCart shoppingCart;
+    //@ManyToOne
+    //private ShoppingCart shoppingCart;
+
+    private Long shoppingCartId;
 
     @Positive
     private Long productId;
 
     @Positive
-    private int quantity;
+    private Integer quantity;
 
-    private double price;
+    private Double price;
 
-    private double amountBeforeDiscount;
+    private Double amountBeforeDiscount;
 
-    private double discountAmount;
+    private Double discountAmount;
 
-    private double amount;
+    private Double amount;
 
     private transient List<String> discountApplied;
 
@@ -51,18 +79,19 @@ public class ShoppingCartItem {
     }
 
     public ShoppingCartItem(Long shoppingCartId, Long productId, int quantity) {
-        this.shoppingCart = new ShoppingCart(shoppingCartId);
+        //this.shoppingCart = new ShoppingCart(shoppingCartId);
+        this.shoppingCartId = shoppingCartId;
         this.productId = productId;
         this.quantity = quantity;
     }
 
-    public ShoppingCart getShoppingCart() {
+    /*public ShoppingCart getShoppingCart() {
         return shoppingCart;
     }
 
     public void setShoppingCart(ShoppingCart shoppingCart) {
         this.shoppingCart = shoppingCart;
-    }
+    }*/
 
     public Long getProductId() {
         return productId;
@@ -80,43 +109,43 @@ public class ShoppingCartItem {
         this.id = id;
     }
 
-    public int getQuantity() {
+    public @Positive Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(@Positive Integer quantity) {
         this.quantity = quantity;
     }
 
-    public double getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(double price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
-    public double getAmountBeforeDiscount() {
+    public Double getAmountBeforeDiscount() {
         return amountBeforeDiscount;
     }
 
-    public void setAmountBeforeDiscount(double amountBeforeDiscount) {
+    public void setAmountBeforeDiscount(Double amountBeforeDiscount) {
         this.amountBeforeDiscount = amountBeforeDiscount;
     }
 
-    public double getDiscountAmount() {
+    public Double getDiscountAmount() {
         return discountAmount;
     }
 
-    public void setDiscountAmount(double discountAmount) {
+    public void setDiscountAmount(Double discountAmount) {
         this.discountAmount = discountAmount;
     }
 
-    public double getAmount() {
+    public Double getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(Double amount) {
         this.amount = amount;
     }
 
@@ -127,4 +156,15 @@ public class ShoppingCartItem {
     public void setDiscountApplied(List<String> discountApplied) {
         this.discountApplied = discountApplied;
     }
+
+    public Long getShoppingCartId() {
+        return shoppingCartId;
+    }
+
+    public void setShoppingCartId(Long shoppingCartId) {
+        this.shoppingCartId = shoppingCartId;
+    }
 }
+
+//TODO Lombok @NoArgsConstructor
+//TODO @GetterAndSetter

@@ -69,20 +69,20 @@ public class Examples {
         shoppingCart2WithProduct12Request.setItems(List.of(cart2Product1Qty1Request, cart2Product2Qty1Request));
         shoppingCart2WithProduct123Request.setItems(List.of(cart2Product1Qty1Request, cart2Product2Qty1Request, cart2Product3Qty1Request));
 
-        calculatedCart2Product1Qty1.setPrice(11000);
-        calculatedCart2Product1Qty1.setAmountBeforeDiscount(11000);
-        calculatedCart2Product1Qty1.setDiscountAmount(2000);
-        calculatedCart2Product1Qty1.setAmount(9000);
+        calculatedCart2Product1Qty1.setPrice(11000.0);
+        calculatedCart2Product1Qty1.setAmountBeforeDiscount(11000.0);
+        calculatedCart2Product1Qty1.setDiscountAmount(2000.0);
+        calculatedCart2Product1Qty1.setAmount(9000.0);
 
-        calculatedCart2Product2Qty1.setPrice(600);
-        calculatedCart2Product2Qty1.setAmountBeforeDiscount(600);
-        calculatedCart2Product2Qty1.setDiscountAmount(100);
-        calculatedCart2Product2Qty1.setAmount(500);
+        calculatedCart2Product2Qty1.setPrice(600.0);
+        calculatedCart2Product2Qty1.setAmountBeforeDiscount(600.0);
+        calculatedCart2Product2Qty1.setDiscountAmount(100.0);
+        calculatedCart2Product2Qty1.setAmount(500.0);
 
-        calculatedCart2Product3Qty1.setPrice(500);
-        calculatedCart2Product3Qty1.setAmountBeforeDiscount(500);
-        calculatedCart2Product3Qty1.setDiscountAmount(100);
-        calculatedCart2Product3Qty1.setAmount(400);
+        calculatedCart2Product3Qty1.setPrice(500.0);
+        calculatedCart2Product3Qty1.setAmountBeforeDiscount(500.0);
+        calculatedCart2Product3Qty1.setDiscountAmount(100.0);
+        calculatedCart2Product3Qty1.setAmount(400.0);
 
         shoppingCart2WithProduct1.setItems(List.of(calculatedCart2Product1Qty1));
         shoppingCart2WithProduct1.setTotalAmountBeforeDiscount(11000);
