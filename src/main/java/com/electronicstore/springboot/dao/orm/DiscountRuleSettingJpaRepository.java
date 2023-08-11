@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public interface DiscountRuleSettingRepository extends JpaRepository<DiscountRuleSetting, Long> {
+public interface DiscountRuleSettingJpaRepository extends JpaRepository<DiscountRuleSetting, Long> {
 
     @Override
     Optional<DiscountRuleSetting> findById(Long id);

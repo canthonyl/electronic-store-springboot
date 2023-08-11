@@ -1,8 +1,12 @@
 package com.electronicstore.springboot.model;
 
-//import javax.persistence.Entity;
-
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
 
 @Entity
 public class DiscountRule {
@@ -15,23 +19,24 @@ public class DiscountRule {
     @SequenceGenerator(name = "discount_rule_id_seq", sequenceName = "discount_rule_id_seq", allocationSize = 1)
     private Long id;
 
-    private long thresholdUnit;
+    private Long thresholdUnit;
 
     @Enumerated(EnumType.STRING)
     private ThresholdType thresholdUnitType;
 
-    private long applicableUnit;
+
+    private Long applicableUnit;
 
     @Enumerated(EnumType.STRING)
     private ApplicableType applicableUnitType;
 
-    private double applicableDiscount;
+    private Double applicableDiscount;
 
-    private double overrideAmount;
+    private Double overrideAmount;
 
     private String description;
 
-    private long ruleGroupId;
+    private Long ruleGroupId;
 
     public Long getId() {
         return id;
@@ -49,11 +54,11 @@ public class DiscountRule {
         this.thresholdUnitType = thresholdUnitType;
     }
 
-    public long getThresholdUnit() {
+    public Long getThresholdUnit() {
         return thresholdUnit;
     }
 
-    public void setThresholdUnit(long thresholdUnit) {
+    public void setThresholdUnit(Long thresholdUnit) {
         this.thresholdUnit = thresholdUnit;
     }
 
@@ -65,27 +70,27 @@ public class DiscountRule {
         this.applicableUnitType = applicableUnitType;
     }
 
-    public long getApplicableUnit() {
+    public Long getApplicableUnit() {
         return applicableUnit;
     }
 
-    public void setApplicableUnit(long applicableUnit) {
+    public void setApplicableUnit(Long applicableUnit) {
         this.applicableUnit = applicableUnit;
     }
 
-    public double getApplicableDiscount() {
+    public Double getApplicableDiscount() {
         return applicableDiscount;
     }
 
-    public void setApplicableDiscount(double applicableDiscount) {
+    public void setApplicableDiscount(Double applicableDiscount) {
         this.applicableDiscount = applicableDiscount;
     }
 
-    public double getOverrideAmount() {
+    public Double getOverrideAmount() {
         return overrideAmount;
     }
 
-    public void setOverrideAmount(double overrideAmount) {
+    public void setOverrideAmount(Double overrideAmount) {
         this.overrideAmount = overrideAmount;
     }
 
@@ -97,11 +102,11 @@ public class DiscountRule {
         this.description = description;
     }
 
-    public long getRuleGroupId() {
+    public Long getRuleGroupId() {
         return ruleGroupId;
     }
 
-    public void setRuleGroupId(long ruleGroupId) {
+    public void setRuleGroupId(Long ruleGroupId) {
         this.ruleGroupId = ruleGroupId;
     }
 }

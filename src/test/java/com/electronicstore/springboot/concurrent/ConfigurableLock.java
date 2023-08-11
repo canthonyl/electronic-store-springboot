@@ -1,11 +1,11 @@
 package com.electronicstore.springboot.concurrent;
 
-public class TestLock implements OptimisticLock {
+public class ConfigurableLock implements OptimisticLock {
 
     private final boolean performLock;
     private final AtomicBooleanLock lock;
 
-    public TestLock(boolean toLock) {
+    public ConfigurableLock(boolean toLock) {
         performLock = toLock;
         lock = new AtomicBooleanLock();
     }

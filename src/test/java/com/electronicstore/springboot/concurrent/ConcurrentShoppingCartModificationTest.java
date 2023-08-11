@@ -1,9 +1,8 @@
 package com.electronicstore.springboot.concurrent;
 
-import com.electronicstore.springboot.dao.orm.ProductCategoryRepository;
-import com.electronicstore.springboot.dao.orm.ProductRepository;
-import com.electronicstore.springboot.dao.orm.ShoppingCartRepository;
+import com.electronicstore.springboot.dao.EntityDatastore;
 import com.electronicstore.springboot.model.Product;
+import com.electronicstore.springboot.model.ProductCategory;
 import com.electronicstore.springboot.model.ShoppingCart;
 import com.electronicstore.springboot.model.ShoppingCartItem;
 import com.electronicstore.springboot.service.ShoppingCartService;
@@ -11,20 +10,23 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.toMap;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
 
-@ActiveProfiles("test")
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class ConcurrentShoppingCartModificationTest {
@@ -33,20 +35,17 @@ public class ConcurrentShoppingCartModificationTest {
     ShoppingCartService shoppingCartService;
 
     @Autowired
-    ShoppingCartRepository shoppingCartRepository;
+    EntityDatastore<ProductCategory> productCategoryRepository;
 
     @Autowired
-    ProductCategoryRepository productCategoryRepository;
-
-    @Autowired
-    ProductRepository productRepository;
+    EntityDatastore<Product> productDatastore;
 
     //@Test
     public void multipleGetRequests(){
         try {
 
             double expectDiffAmount = 0.0;
-            int numThreads = 20;
+            int numThreads = 1;
             int getRequestElapsedTimeMs = 1000;
             createProducts(1000, defaultValues());
 
@@ -55,7 +54,7 @@ public class ConcurrentShoppingCartModificationTest {
             assertEquals(1L, shoppingCart.getId());
 
             List<ShoppingCartItem> allItemRequest = createItemList(1000, defaultValues());
-            //shoppingCartService.addShoppingCartItems(1L, request);
+            shoppingCartService.addShoppingCartItems(1L, allItemRequest);
 
             List<Callable<Double>> requests = IntStream.range(0, numThreads)
                     .mapToObj(i -> {
@@ -133,7 +132,7 @@ public class ConcurrentShoppingCartModificationTest {
                     setupProduct.accept(p);
                     return p;
                 }).toList();
-        productRepository.saveAll(productList);
+        productDatastore.persist(productList);
         return productList;
     }
 

@@ -1,50 +1,59 @@
 package com.electronicstore.springboot.fixture.steps;
 
 import com.electronicstore.springboot.context.CommonContext;
-import com.electronicstore.springboot.dao.orm.*;
+import com.electronicstore.springboot.dao.EntityDatastore;
 import com.electronicstore.springboot.dto.ProductRequest;
 import com.electronicstore.springboot.fixture.ScenarioContext;
-import com.electronicstore.springboot.model.*;
+import com.electronicstore.springboot.model.DiscountRule;
+import com.electronicstore.springboot.model.DiscountRuleSetting;
+import com.electronicstore.springboot.model.Product;
+import com.electronicstore.springboot.model.ProductCategory;
+import com.electronicstore.springboot.model.ShoppingCart;
+import com.electronicstore.springboot.model.ShoppingCartItem;
 import com.electronicstore.springboot.service.ProductService;
 import com.electronicstore.springboot.service.ShoppingCartService;
 import com.google.gson.Gson;
 import io.cucumber.java.After;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.cucumber.java.Before;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.RequestEntity;
+
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toMap;
 import static net.javacrumbs.jsonunit.JsonAssert.assertJsonEquals;
 import static org.assertj.core.util.introspection.CaseFormatUtils.toCamelCase;
 import static org.hamcrest.MatcherAssert.assertThat;
-
-import javax.sql.DataSource;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.junit.Assert.*;
-import static org.springframework.http.HttpMethod.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static org.springframework.http.HttpMethod.DELETE;
+import static org.springframework.http.HttpMethod.GET;
+import static org.springframework.http.HttpMethod.POST;
+import static org.springframework.http.HttpMethod.PUT;
 
 public class Steps {
 
     @Autowired
     CommonContext appContext;
-
-    @Autowired
-    ProductRepository productRepository;
-
-    @Autowired
-    ShoppingCartItemRepository shoppingCartItemRepository;
-
-    @Autowired
-    DataSource dataSource;
 
     @Autowired
     TestRestTemplate restTemplate;
@@ -56,32 +65,26 @@ public class Steps {
     ProductService productService;
 
     @Autowired
-    ProductCategoryRepository productCategoryRepository;
-
-    @Autowired
-    DiscountRuleRepository discountRuleRepository;
-
-    @Autowired
-    DiscountRuleSettingRepository discountRuleSettingRepository;
-
-    @Autowired
     ShoppingCartService shoppingCartService;
 
-    Gson gson = new Gson();
+    @Autowired
+    EntityDatastore<ProductCategory> productCategoryRepository;
 
+    @Autowired
+    EntityDatastore<Product> productDatastore;
+
+    @Autowired
+    EntityDatastore<DiscountRule> discountRuleDatastore;
+
+    @Autowired
+    EntityDatastore<DiscountRuleSetting> discountRuleSettingDatastore;
+
+    Gson gson = new Gson();
 
     @Before
     public void beforeScenario() {
         scenarioContext = new ScenarioContext();
-        //scenarioContext.webTestClient = WebTestClient.bindToServer().baseUrl(appContext.getBaseUriBuilder().toUriString()).build();
         scenarioContext.shoppingCarts = new HashMap<>();
-    }
-
-    @After
-    public void afterScenario(){
-        /*ResourceDatabasePopulator populator = new ResourceDatabasePopulator();
-        populator.addScripts(new ClassPathResource("schema.sql"));
-        populator.execute(dataSource);*/
     }
 
     @Given("the following products")
@@ -89,16 +92,9 @@ public class Steps {
         scenarioContext.productDefinitionList = products;
     }
 
-    //@Given("the following products in {word} table")
     @Given("the following products persisted")
     public void theFollowingProductsInTable(List<Product> dataTable) {
-        // populate table
-        productRepository.saveAll(dataTable);
-        storeTableState("products");
-    }
-
-    private void storeTableState(String tableName){
-            //todo
+        productDatastore.persist(dataTable);
     }
 
     @When("a POST request containing products is sent to {string}")
@@ -109,13 +105,6 @@ public class Steps {
                 .body(gson.toJson(productRequest));
         scenarioContext.response = restTemplate.exchange(resource, POST, request, String.class);
     }
-
-    /*@When("a GET request is sent to {string}")
-    public void aRequestIsSentToProductsEndpoint(String resource) {
-        scenarioContext.response = scenarioContext.webTestClient.get()
-                .uri(resource)
-                .exchange();
-    }*/
 
     @When("a {word} request is sent to {string}")
     public void anHttpRequestIsSent(String httpMethod, String resource) {
@@ -143,13 +132,11 @@ public class Steps {
     @Then("http status {word} is received")
     public void verifyHttpStatusReceived(String status) {
         HttpStatus httpStatus = HttpStatus.valueOf(status);
-        //scenarioContext.webTestClientResponse.expectStatus().isEqualTo(HttpStatusCode.valueOf(httpStatus.value()));
         assertEquals(httpStatus.value(), scenarioContext.response.getStatusCode().value());
     }
 
     @Then("{string} in Http Header contains the following values")
     public void locationInHttpHeaderContainsTheFollowingLinks(String headerKey, List<String> list) {
-        //scenarioContext.webTestClientResponse.expectHeader().values(headerKey, containsInAnyOrder(list.toArray(String[]::new)));
         HttpHeaders headers = scenarioContext.response.getHeaders();
         assertTrue(headers.containsKey(headerKey));
         assertThat(headers.get(headerKey), containsInAnyOrder(list.toArray(String[]::new)));
@@ -157,15 +144,12 @@ public class Steps {
 
     @Then("the following response body")
     public void theFollowingInResponseBody(String json) {
-        System.out.println("json = "+json);
-        //scenarioContext.webTestClientResponse.expectBody().consumeWith(json().isEqualTo(json));
         assertJsonEquals(json, scenarioContext.response.getBody());
     }
 
-
     @Given("the following product categories")
     public void setupProductCategory(List<ProductCategory> list){
-        productCategoryRepository.saveAll(list);
+        productCategoryRepository.persist(list);
     }
 
     @Given("the following products in the electronic store")
@@ -176,17 +160,17 @@ public class Steps {
     @Given("a discount rule for {string}")
     public void setupDiscountRule(String description, DiscountRule rule){
         rule.setDescription(description);
-        discountRuleRepository.save(rule);
+        discountRuleDatastore.persist(rule);
     }
 
     @Given("the following discount rules")
     public void setupDiscountRule(List<DiscountRule> list) {
-        discountRuleRepository.saveAll(list);
+        discountRuleDatastore.persist(list);
     }
 
     @Given("the following rule settings")
     public void setupRuleSetting(List<DiscountRuleSetting> rule){
-        discountRuleSettingRepository.saveAll(rule);
+        discountRuleSettingDatastore.persist(rule);
     }
 
     @Given("an empty shopping cart with id {int} is created")
@@ -205,19 +189,9 @@ public class Steps {
         scenarioContext.shoppingCarts.put(cartId, shoppingCart);
     }
 
-    /*@Given("a shopping cart with id {int} is created with the following items")
-    public void aNewCartIsCreatedWithItems(long cartId, List<ShoppingCartItem> initialItems) {
-        ShoppingCart cart = shoppingCartService.createShoppingCart(Collections.emptyList());
-        assertEquals(cartId, cart.getId().longValue());
-        shoppingCartService.addShoppingCartItems(cartId, initialItems);
-        cart = shoppingCartService.getShoppingCart(cart.getId()).get();
-        scenarioContext.shoppingCarts.put(cart.getId(), cart);
-    }*/
-
     @When("the following items are added to the shopping cart id {int}")
     public void productIsAddedToShoppingCartId(long cartId, List<ShoppingCartItem> items) {
-        ShoppingCart cart = new ShoppingCart(cartId);
-        items.forEach(i-> i.setShoppingCart(cart));
+        items.forEach(i-> i.setShoppingCartId(cartId));
         shoppingCartService.addShoppingCartItems(cartId, items);
     }
 
@@ -226,6 +200,7 @@ public class Steps {
         Optional<ShoppingCart> result = shoppingCartService.getShoppingCart(cartId);
         assertTrue(result.isPresent());
         ShoppingCart cart = result.get();
+        shoppingCartService.refreshShoppingCart(cart);
         scenarioContext.shoppingCarts.put(cart.getId(), cart);
     }
 
@@ -259,12 +234,10 @@ public class Steps {
 
     private Map<String, Double> toFieldValueMap(List<Map<String, String>> list) {
         Map<String, Double> map = new HashMap<>();
-        System.out.println("list = "+list);
 
         for (Map<String, String> e : list) {
             Map<String, String> adjKey = new HashMap<>();
             e.forEach((k,v) -> adjKey.put(toCamelCase(k), v));
-            System.out.println("adjKey = "+adjKey);
 
             String field = toCamelCase(adjKey.get("field"));
             String value = adjKey.get("value");

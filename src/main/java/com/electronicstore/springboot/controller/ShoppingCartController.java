@@ -8,19 +8,23 @@ import com.electronicstore.springboot.model.ShoppingCartItem;
 import com.electronicstore.springboot.service.ShoppingCartService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static com.electronicstore.springboot.dto.ShoppingCartRequest.ResponseType.ShoppingCart;
 
-//TODO: each request should be associated with a valid session?
-//TODO: apply header attribute at controller level?
 @RestController
 @RequestMapping("/shoppingCarts")
 public class ShoppingCartController {
@@ -34,7 +38,10 @@ public class ShoppingCartController {
     @GetMapping("{cartId}")
     public ResponseEntity<ShoppingCart> getShoppingCart(@PathVariable Long cartId) {
         return shoppingCartService.getShoppingCart(cartId)
-                .map(s -> ResponseEntity.ok(s))
+                .map(s -> {
+                    shoppingCartService.refreshShoppingCart(s);
+                    return ResponseEntity.ok(s);
+                })
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -48,21 +55,19 @@ public class ShoppingCartController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    //TODO: ensure non editable fields are ignored
-    //TODO: customize mapping
     @PostMapping
     public ResponseEntity<ShoppingCartResponse> createShoppingCart(@RequestBody ShoppingCartRequest request) {
-        List<ShoppingCartItem> initialItems = Optional.ofNullable(request.getShoppingCartItems()).orElse(Collections.emptyList());
-        ShoppingCart shoppingCart = new ShoppingCart(initialItems);
-        shoppingCart = shoppingCartService.createShoppingCart(shoppingCart);
+        ShoppingCart shoppingCart = shoppingCartService.createShoppingCart(new ShoppingCart(request.getShoppingCartItems()));
+
         Long id = shoppingCart.getId();
+
         URI uri = appContext.getBaseUriBuilder()
                 .pathSegment("shoppingCarts", "{id}")
                 .build(id);
+
         if (request.getResponseType() == ShoppingCart) {
-            ShoppingCart refreshShoppingCart = shoppingCartService.getShoppingCart(id).get();
-            ShoppingCartResponse response = new ShoppingCartResponse(refreshShoppingCart);
-            return ResponseEntity.created(uri).body(response);
+            shoppingCartService.refreshShoppingCart(shoppingCart);
+            return ResponseEntity.created(uri).body(new ShoppingCartResponse(shoppingCart));
         } else {
             return ResponseEntity.created(uri).build();
         }
@@ -77,6 +82,7 @@ public class ShoppingCartController {
         if (request.getResponseType() == ShoppingCart) {
             //replace with a refresh method
             ShoppingCart s = shoppingCartService.getShoppingCart(cartId).get();
+            shoppingCartService.refreshShoppingCart(s);
             ShoppingCartResponse body = new ShoppingCartResponse(s);
             return ResponseEntity.ok().body(body);
         } else {
@@ -127,3 +133,7 @@ public class ShoppingCartController {
     }
 
 }
+
+//TODO: each request should be associated with a valid session?
+//TODO: apply header attribute at controller level?
+//TODO: ensure non editable fields are ignored

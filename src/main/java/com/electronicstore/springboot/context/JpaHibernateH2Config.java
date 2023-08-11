@@ -1,39 +1,47 @@
 package com.electronicstore.springboot.context;
 
-import com.electronicstore.springboot.dao.ProductDatastore;
-import com.electronicstore.springboot.dao.jdbc.ProductDatastoreJdbc;
-import com.electronicstore.springboot.dao.orm.BaseRepositoryImpl;
-import com.electronicstore.springboot.dao.orm.ProductRepository;
+import com.electronicstore.springboot.dao.Datastore;
+import com.electronicstore.springboot.dao.EntityDatastore;
+import com.electronicstore.springboot.dao.orm.BaseJpaRepositoryImpl;
+import com.electronicstore.springboot.dao.orm.ProductCategoryJpaRepository;
+import com.electronicstore.springboot.dao.orm.ProductJpaRepository;
+import com.electronicstore.springboot.model.Product;
+import com.electronicstore.springboot.model.ProductCategory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-
-import javax.sql.DataSource;
-
-import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.H2;
 
 //TODO dev profile
 //TODO enable logging of orm mapping
 //TODO applicable managed entity manager for concurrency
 @Profile("data.orm")
 @Configuration
-@EnableJpaRepositories(basePackages = "com.electronicstore.springboot", repositoryBaseClass = BaseRepositoryImpl.class)
+//@EnableJpaRepositories(basePackages = "com.electronicstore.springboot", repositoryBaseClass = BaseJpaRepositoryImpl.class)
 @EntityScan(basePackages = {"com.electronicstore.springboot.model"})
 @EnableTransactionManagement
 public class JpaHibernateH2Config {
 
+    /*
     @Autowired
-    private ProductRepository productRepository;
+    private ProductJpaRepository productRepository;
+
+    @Autowired
+    private ProductCategoryJpaRepository productCategoryRepository;
 
     @Bean
-    public ProductDatastore productDatastore(){
-        return productRepository;
+    public EntityDatastore<Product> productDatastore(){
+        return new EntityDatastore<>(productRepository);
     }
+
+    @Bean
+    public EntityDatastore<ProductCategory> productCategoryDatastore(){
+        return new EntityDatastore<>(productCategoryRepository);
+    }*/
 
     /*@Bean
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {

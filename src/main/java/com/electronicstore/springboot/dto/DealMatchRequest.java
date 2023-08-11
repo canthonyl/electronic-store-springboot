@@ -2,7 +2,11 @@ package com.electronicstore.springboot.dto;
 
 import com.electronicstore.springboot.model.Product;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import static com.electronicstore.springboot.model.DiscountRule.ThresholdType;
