@@ -4,10 +4,12 @@ package com.electronicstore.springboot.dao;
 import com.electronicstore.springboot.dao.Datastore;
 import com.electronicstore.springboot.dao.EntityDatastore;
 import com.electronicstore.springboot.model.Product;
+import com.zaxxer.hikari.HikariPoolMXBean;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationContext;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.util.List;
@@ -29,6 +31,11 @@ public class DatastoreTest {
 
     Product request1, request2, request3, request4, request5;
     Product category1, category2, category3;
+
+    @Autowired
+    ApplicationContext appContext;
+
+    HikariPoolMXBean poolMXBean;
 
     @BeforeEach
     public void setup(){
@@ -70,6 +77,9 @@ public class DatastoreTest {
 
         category3 = new Product();
         category3.setCategoryId(3L);
+
+        poolMXBean = (HikariPoolMXBean) appContext.getBean("hikariPoolMXBean");
+
     }
 
     @Test
@@ -209,7 +219,13 @@ public class DatastoreTest {
 
     }
 
-
+    private void dump(HikariPoolMXBean pool) {
+        System.out.println("\npool name = "+pool);
+        System.out.println("total connections = "+pool.getTotalConnections());
+        System.out.println("active connections = "+pool.getActiveConnections());
+        System.out.println("idle connections = "+pool.getIdleConnections());
+        System.out.println("threads awaiting connection = "+pool.getThreadsAwaitingConnection());
+    }
 
 
 }
