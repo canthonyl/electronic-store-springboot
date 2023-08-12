@@ -5,6 +5,7 @@ import org.springframework.boot.web.server.WebServer;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.boot.web.servlet.context.ServletWebServerInitializedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -13,6 +14,7 @@ public class CommonContext {
 
     @Autowired
     private ServletWebServerApplicationContext webServerAppCtxt;
+
 
     private WebServer webServer;
     private int port;

@@ -1,16 +1,16 @@
-drop sequence if exists product_category_id_seq;
-drop sequence if exists product_id_seq;
-drop sequence if exists shopping_cart_id_seq;
-drop sequence if exists shopping_cart_item_id_seq;
-drop sequence if exists discount_rule_id_seq;
-drop sequence if exists discount_rule_setting_id_seq;
-
 drop table if exists shopping_cart_item;
 drop table if exists shopping_cart;
 drop table if exists product;
 drop table if exists product_category;
 drop table if exists discount_rule_setting;
 drop table if exists discount_rule;
+
+drop sequence if exists product_category_id_seq;
+drop sequence if exists product_id_seq;
+drop sequence if exists shopping_cart_id_seq;
+drop sequence if exists shopping_cart_item_id_seq;
+drop sequence if exists discount_rule_id_seq;
+drop sequence if exists discount_rule_setting_id_seq;
 
 create sequence product_category_id_seq as bigint;
 create sequence product_id_seq as bigint;

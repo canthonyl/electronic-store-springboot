@@ -1,7 +1,9 @@
 package com.electronicstore.springboot.dao.jdbc;
 
 import com.electronicstore.springboot.dao.Datastore;
+import com.zaxxer.hikari.HikariPoolMXBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.SingleColumnRowMapper;
@@ -19,15 +21,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 import static java.util.Collections.emptyList;
 
 public class EntityJdbcRepository<E> implements Datastore<E, Long>
 {
-    private static RowMapper<Integer> intRowMapper = SingleColumnRowMapper.newInstance(Integer.class);
+    private static RowMapper<Integer> intRowMapper = SingleColumnRowMapper.newInstance(Integer.class);;
 
     @Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private ApplicationContext appContext;
+
 
     private JdbcTableMetadata<E> metadata;
     private BiFunction<E, Boolean, SqlParameterSource> entityParamSource;
@@ -53,29 +60,38 @@ public class EntityJdbcRepository<E> implements Datastore<E, Long>
         queryAll = metadata.queryAll();
         insertOrUpdate = metadata.insertOrUpdate();
         deleteFromTable = metadata.deleteRowByKey();
+
     }
 
     //Datastore API
     @Override
     public boolean contains(Long id) {
-        return jdbcTemplate.queryForStream(queryExistByKey, metadata.keyParamSource(id), intRowMapper).findAny().isPresent();
+        try (Stream<Integer> result = jdbcTemplate.queryForStream(queryExistByKey, metadata.keyParamSource(id), intRowMapper)) {
+            return result.findAny().isPresent();
+        }
     }
 
     @Override
     public Optional<E> find(Long id) {
-        return jdbcTemplate.queryForStream(queryByKey, metadata.keyParamSource(id), entityRowMapper).findFirst();
+        try (Stream<E> resultStream = jdbcTemplate.queryForStream(queryByKey, metadata.keyParamSource(id), entityRowMapper)) {
+            return resultStream.findFirst();
+        }
     }
 
     @Override
     public List<E> find(Collection<Long> ids) {
-        return jdbcTemplate.queryForStream(queryByMultipleKeys, metadata.keyParamSource(ids), entityRowMapper).toList();
+        try (Stream<E> resultStream = jdbcTemplate.queryForStream(queryByMultipleKeys, metadata.keyParamSource(ids), entityRowMapper)) {
+            return resultStream.toList();
+        }
     }
 
     @Override
     public List<E> findMatching(E entity) {
         String queryByFields = metadata.queryByNonNullFields(entity);
         SqlParameterSource paramSource = entityParamSource.apply(entity, true);
-        return jdbcTemplate.queryForStream(queryByFields, paramSource, entityRowMapper).toList();
+        try (Stream<E> resultStream = jdbcTemplate.queryForStream(queryByFields, paramSource, entityRowMapper)){
+            return resultStream.toList();
+        }
     }
 
     @Override
@@ -90,7 +106,9 @@ public class EntityJdbcRepository<E> implements Datastore<E, Long>
         }
         String queryValuesIn = metadata.queryByValuesIn(criteria.keySet());
         SqlParameterSource paramSource = new MapSqlParameterSource(criteria);
-        return jdbcTemplate.queryForStream(queryValuesIn, paramSource, entityRowMapper).toList();
+        try (Stream<E> resultStream = jdbcTemplate.queryForStream(queryValuesIn, paramSource, entityRowMapper)) {
+            return resultStream.toList();
+        }
     }
 
     @Override
