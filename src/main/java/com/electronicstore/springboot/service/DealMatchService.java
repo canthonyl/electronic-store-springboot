@@ -191,7 +191,7 @@ public class DealMatchService {
             List<Long> itemIdsForProduct = mapProductIdToCartItemId.get(product.getId());
             List<DiscountRule> ruleDetails = ruleResult.stream().map(applicableRules::get).toList();
             response.getItemIdToDeals().put(itemIdsForProduct.get(0), ruleDetails);
-            response.getItemsDiscountAmount().put(itemIdsForProduct.get(0), savingAmount);
+            response.getItemDiscountAmount().put(itemIdsForProduct.get(0), savingAmount);
         }
 
         return response;

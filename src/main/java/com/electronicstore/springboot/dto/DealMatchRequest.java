@@ -32,10 +32,6 @@ public class DealMatchRequest {
         return Arrays.stream(ThresholdType.values()).collect(toMap(Function.identity(), t -> 0.0));
     }
 
-    /*public void setCharacteristic(Group group, long id, ThresholdType type, double value, List<Long> relatedItemId) {
-        characteristic.get(group).computeIfAbsent(id, this::initThresholdMap).put(type, value);
-    }*/
-
     public void addCharacteristic(Product product, ThresholdType type, double value) {
         characteristic.get(Group.all).get(0L).merge(type, value, Double::sum);
         characteristic.get(Group.category).computeIfAbsent(product.getCategoryId(), i-> new HashMap<>()).merge(type, value, Double::sum);
