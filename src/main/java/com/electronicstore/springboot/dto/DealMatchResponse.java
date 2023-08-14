@@ -1,11 +1,13 @@
 package com.electronicstore.springboot.dto;
 
 import com.electronicstore.springboot.model.DiscountRule;
+import lombok.Getter;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public class DealMatchResponse {
 
     private Map<Long, List<DiscountRule>> itemIdToDeals;
@@ -14,14 +16,6 @@ public class DealMatchResponse {
     public DealMatchResponse() {
         this.itemIdToDeals = new HashMap<>();
         this.itemDiscountAmount = new HashMap<>();
-    }
-
-    public Map<Long, Double> getItemsDiscountAmount() {
-        return itemDiscountAmount;
-    }
-
-    public Map<Long, List<DiscountRule>> getItemIdToDeals() {
-        return itemIdToDeals;
     }
 
 }

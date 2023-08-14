@@ -1,8 +1,13 @@
 package com.electronicstore.springboot.model;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.HashSet;
 import java.util.Set;
 
+@Getter
+@Setter
 public class FreeProductRule {
 
     private Set<Long> triggerProducts;
@@ -13,19 +18,4 @@ public class FreeProductRule {
         freeProducts = new HashSet<>();
     }
 
-    public void setTriggerProducts(Set<Long> ids) {
-        triggerProducts = ids;
-    }
-
-    public void setFreeProducts(Set<Long> ids) {
-        freeProducts = ids;
-    }
-
-    public Set<Long> getTriggerProducts() {
-        return triggerProducts;
-    }
-
-    public Set<Long> getFreeProducts() {
-        return freeProducts;
-    }
 }

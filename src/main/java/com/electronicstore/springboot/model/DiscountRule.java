@@ -7,7 +7,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 public class DiscountRule {
 
@@ -24,7 +28,6 @@ public class DiscountRule {
     @Enumerated(EnumType.STRING)
     private ThresholdType thresholdUnitType;
 
-
     private Long applicableUnit;
 
     @Enumerated(EnumType.STRING)
@@ -38,75 +41,5 @@ public class DiscountRule {
 
     private Long ruleGroupId;
 
-    public Long getId() {
-        return id;
-    }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public ThresholdType getThresholdUnitType() {
-        return thresholdUnitType;
-    }
-
-    public void setThresholdUnitType(ThresholdType thresholdUnitType) {
-        this.thresholdUnitType = thresholdUnitType;
-    }
-
-    public Long getThresholdUnit() {
-        return thresholdUnit;
-    }
-
-    public void setThresholdUnit(Long thresholdUnit) {
-        this.thresholdUnit = thresholdUnit;
-    }
-
-    public ApplicableType getApplicableUnitType() {
-        return applicableUnitType;
-    }
-
-    public void setApplicableUnitType(ApplicableType applicableUnitType) {
-        this.applicableUnitType = applicableUnitType;
-    }
-
-    public Long getApplicableUnit() {
-        return applicableUnit;
-    }
-
-    public void setApplicableUnit(Long applicableUnit) {
-        this.applicableUnit = applicableUnit;
-    }
-
-    public Double getApplicableDiscount() {
-        return applicableDiscount;
-    }
-
-    public void setApplicableDiscount(Double applicableDiscount) {
-        this.applicableDiscount = applicableDiscount;
-    }
-
-    public Double getOverrideAmount() {
-        return overrideAmount;
-    }
-
-    public void setOverrideAmount(Double overrideAmount) {
-        this.overrideAmount = overrideAmount;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Long getRuleGroupId() {
-        return ruleGroupId;
-    }
-
-    public void setRuleGroupId(Long ruleGroupId) {
-        this.ruleGroupId = ruleGroupId;
-    }
 }

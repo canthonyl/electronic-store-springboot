@@ -1,9 +1,13 @@
 package com.electronicstore.springboot.dto;
 
 import com.electronicstore.springboot.model.Product;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
+@Getter
+@Setter
 public class ProductResponse {
 
     private List<Product> products;
@@ -14,11 +18,4 @@ public class ProductResponse {
         products = list;
     }
 
-    public List<Product> getProducts() {
-        return products;
-    }
-
-    public void setProducts(List<Product> products) {
-        this.products = products;
-    }
 }

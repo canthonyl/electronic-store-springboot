@@ -171,7 +171,7 @@ public class ShoppingCartService {
                 toList()));
 
         DealMatchResponse response = refreshDeals(products, itemsByProduct);
-        Map<Long, Double> itemDiscountAmount = response.getItemsDiscountAmount();
+        Map<Long, Double> itemDiscountAmount = response.getItemDiscountAmount();
         Map<Long, List<DiscountRule>> itemDiscountRuleApplied = response.getItemIdToDeals();
         Map<Long, ShoppingCartItem> cartItems = cart.getItems().stream().collect(toMap(ShoppingCartItem::getId, Function.identity()));
 

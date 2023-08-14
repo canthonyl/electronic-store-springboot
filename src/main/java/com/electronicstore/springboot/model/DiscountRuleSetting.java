@@ -6,9 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Set;
 
+
+@Getter
+@Setter
 @Entity
 public class DiscountRuleSetting {
 
@@ -27,59 +32,4 @@ public class DiscountRuleSetting {
 
     private String setting;
 
-    public static class Definition {
-        public Set<Long> categoryList;
-        public Set<Long> productList;
-    }
-
-    private transient Definition definition;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getSetting() {
-        return setting;
-    }
-
-    public void setSetting(String setting) {
-        this.setting = setting;
-    }
-
-    public Definition getDefinition() {
-
-        return definition;
-    }
-
-    public void setDefinition(Definition definition) {
-        this.definition = definition;
-    }
-
-    public Long getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(Long categoryId) {
-        this.categoryId = categoryId;
-    }
-
-    public Long getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Long productId) {
-        this.productId = productId;
-    }
-
-    public Long getRuleGroupId() {
-        return ruleGroupId;
-    }
-
-    public void setRuleGroupId(Long ruleGroupId) {
-        this.ruleGroupId = ruleGroupId;
-    }
 }
