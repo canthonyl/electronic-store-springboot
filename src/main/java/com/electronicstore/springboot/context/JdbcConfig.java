@@ -94,7 +94,10 @@ public class JdbcConfig {
                 .column("applicable_unit_type", DiscountRule::setApplicableUnitType, DiscountRule::getApplicableUnitType, DiscountRule.ApplicableType.class)
                 .column("applicable_discount", DiscountRule::setApplicableDiscount, DiscountRule::getApplicableDiscount, Double.class)
                 .column("override_amount", DiscountRule::setOverrideAmount, DiscountRule::getOverrideAmount, Double.class)
+                .column("threshold_product_type", DiscountRule::setThresholdProductType, DiscountRule::getThresholdProductType, DiscountRule.ThresholdProductType.class)
                 .column("rule_group_id", DiscountRule::setRuleGroupId, DiscountRule::getRuleGroupId, Long.class)
+                .column("applicable_product_type", DiscountRule::setApplicableProductType, DiscountRule::getApplicableProductType, DiscountRule.ApplicableProductType.class)
+                .column("applicable_rule_group_id", DiscountRule::setApplicableRuleGroupId, DiscountRule::getApplicableRuleGroupId, Long.class)
                 .column("description", DiscountRule::setDescription, DiscountRule::getDescription, String.class)
                 .rowMapperInstance(DiscountRule::new)
                 .build();
@@ -112,6 +115,7 @@ public class JdbcConfig {
                 .column("category_id", DiscountRuleSetting::setCategoryId, DiscountRuleSetting::getCategoryId, Long.class)
                 .column("product_id", DiscountRuleSetting::setProductId, DiscountRuleSetting::getProductId, Long.class)
                 .column("rule_group_id", DiscountRuleSetting::setRuleGroupId, DiscountRuleSetting::getRuleGroupId, Long.class)
+                .column("quantity", DiscountRuleSetting::setQuantity, DiscountRuleSetting::getQuantity, Integer.class)
                 .column("setting", DiscountRuleSetting::setSetting, DiscountRuleSetting::getSetting, String.class)
                 .rowMapperInstance(DiscountRuleSetting::new)
                 .build();

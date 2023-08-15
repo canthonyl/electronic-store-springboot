@@ -14,10 +14,10 @@ Feature: Items can be added, updated or removed from shopping carts
       | 4  | iPad Pro            | Apple iPad Pro             | 8000.00  | 3           |
       | 5  | Bluetooth Mouse     | Logitech bluetooth mouse   | 1598.00  | 3           |
     And the following discount rules
-      | Id | Description                  | Threshold Unit Type | Threshold Unit | Applicable Unit Type | Applicable Unit | Applicable Discount | Override Amount | Rule Group Id |
-      | 1  | Buy 1 get 50% off the second | Qty                 | 2              | Qty                  | 1               | 0.5                 | 0.0             | 1             |
-      | 2  | Buy 3 get 60% off all 3      | Qty                 | 3              | Qty                  | 3               | 0.6                 | 0.0             | 1             |
-      | 3  | Buy 5 get 70% off all 5      | Qty                 | 5              | Qty                  | 5               | 0.7                 | 0.0             | 1             |
+      | Id | Description                  | Threshold Unit Type | Threshold Unit | Applicable Unit Type | Applicable Unit | Applicable Discount | Override Amount | Threshold Product Type | Rule Group Id | Applicable Product Type |
+      | 1  | Buy 1 get 50% off the second | Qty                 | 2              | Qty                  | 1               | 0.5                 | 0.0             | Any                    | 1             | Identity                |
+      | 2  | Buy 3 get 60% off all 3      | Qty                 | 3              | Qty                  | 3               | 0.6                 | 0.0             | Any                    | 1             | Identity                |
+      | 3  | Buy 5 get 70% off all 5      | Qty                 | 5              | Qty                  | 5               | 0.7                 | 0.0             | Any                    | 1             | Identity                |
     And the following rule settings
       | Id | Category Id | Product Id | Rule Group Id |
       | 1  | 1           |            | 1             |

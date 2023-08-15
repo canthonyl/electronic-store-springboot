@@ -64,8 +64,11 @@ public class ParameterTypes {
         Optional.ofNullable(map.get("applicableUnitType")).map(DiscountRule.ApplicableType::valueOf).ifPresent(p::setApplicableUnitType);
         Optional.ofNullable(map.get("applicableDiscount")).map(Double::valueOf).ifPresent(p::setApplicableDiscount);
         Optional.ofNullable(map.get("overrideAmount")).map(Double::valueOf).ifPresent(p::setOverrideAmount);
-        Optional.ofNullable(map.get("description")).ifPresent(p::setDescription);
+        Optional.ofNullable(map.get("thresholdProductType")).map(DiscountRule.ThresholdProductType::valueOf).ifPresent(p::setThresholdProductType);
         Optional.ofNullable(map.get("ruleGroupId")).map(Long::valueOf).ifPresent(p::setRuleGroupId);
+        Optional.ofNullable(map.get("applicableProductType")).map(DiscountRule.ApplicableProductType::valueOf).ifPresent(p::setApplicableProductType);
+        Optional.ofNullable(map.get("applicableRuleGroupId")).map(Long::valueOf).ifPresent(p::setApplicableRuleGroupId);
+        Optional.ofNullable(map.get("description")).ifPresent(p::setDescription);
         return p;
     }
 
@@ -79,6 +82,7 @@ public class ParameterTypes {
         Optional.ofNullable(map.get("ruleGroupId")).map(Long::valueOf).ifPresent(p::setRuleGroupId);
         Optional.ofNullable(map.get("categoryId")).map(Long::valueOf).ifPresent(p::setCategoryId);
         Optional.ofNullable(map.get("productId")).map(Long::valueOf).ifPresent(p::setProductId);
+        Optional.ofNullable(map.get("quantity")).map(Integer::valueOf).ifPresent(p::setQuantity);
 
         return p;
     }

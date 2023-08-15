@@ -39,7 +39,9 @@ public class DiscountRuleDatastoreTest {
         bulkDiscount1.setApplicableUnitType(DiscountRule.ApplicableType.Qty);
         bulkDiscount1.setApplicableDiscount(0.5);
         bulkDiscount1.setOverrideAmount(0.0);
+        bulkDiscount1.setThresholdProductType(DiscountRule.ThresholdProductType.Any);
         bulkDiscount1.setRuleGroupId(1L);
+        bulkDiscount1.setApplicableProductType(DiscountRule.ApplicableProductType.Identity);
         bulkDiscount1.setDescription("Buy 1 get 50% off second");
 
         bulkDiscount2 = new DiscountRule();
@@ -49,7 +51,9 @@ public class DiscountRuleDatastoreTest {
         bulkDiscount2.setApplicableUnitType(DiscountRule.ApplicableType.Qty);
         bulkDiscount2.setApplicableDiscount(0.3);
         bulkDiscount2.setOverrideAmount(0.0);
+        bulkDiscount2.setThresholdProductType(DiscountRule.ThresholdProductType.Any);
         bulkDiscount2.setRuleGroupId(1L);
+        bulkDiscount2.setApplicableProductType(DiscountRule.ApplicableProductType.Identity);
         bulkDiscount2.setDescription("Buy 3 get 30% off");
 
         bulkDiscount3 = new DiscountRule();
@@ -59,7 +63,9 @@ public class DiscountRuleDatastoreTest {
         bulkDiscount3.setApplicableUnitType(DiscountRule.ApplicableType.Qty);
         bulkDiscount3.setApplicableDiscount(0.35);
         bulkDiscount3.setOverrideAmount(0.0);
+        bulkDiscount3.setThresholdProductType(DiscountRule.ThresholdProductType.Any);
         bulkDiscount3.setRuleGroupId(2L);
+        bulkDiscount3.setApplicableProductType(DiscountRule.ApplicableProductType.Identity);
         bulkDiscount3.setDescription("Buy 4 get 35% off");
     }
 
