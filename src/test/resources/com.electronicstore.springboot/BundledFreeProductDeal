@@ -82,3 +82,7 @@ Feature: Free products offered in bundled deal incur zero cost
       | Id | Description                                 | Threshold Unit Type | Threshold Unit | Applicable Unit Type | Applicable Unit | Applicable Discount | Override Amount | Threshold Product Type | Rule Group Id | Applicable Product Type | Applicable Rule Group Id |
       | 1  | Free Mouse for every Dell Desktop           | Qty                 | 1              | Qty                  | 1               | 1.0                 | 0.0             | All                    | 1             | All                     | 2                        |
       | 2  | Free Mouse for every Macbook Pro + iPad Pro | Qty                 | 1              | Qty                  | 1               | 1.0                 | 0.0             | All                    | 3             | All                     | 2                        |
+
+
+  Scenario: A better deal requiring additional products is applied when the missing items are added to cart
+
