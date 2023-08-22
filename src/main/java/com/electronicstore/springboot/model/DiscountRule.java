@@ -10,6 +10,8 @@ import jakarta.persistence.SequenceGenerator;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Getter
 @Setter
 @Entity
@@ -51,4 +53,5 @@ public class DiscountRule {
 
     private Long applicableRuleGroupId;
 
+    private transient Set<Long> thresholdProductIds;
 }

@@ -19,11 +19,11 @@ Feature: Items can be added, updated or removed from shopping carts
       | 2  | Buy 3 get 60% off all 3      | Qty                 | 3              | Qty                  | 3               | 0.6                 | 0.0             | Any                    | 1             | Identity                |
       | 3  | Buy 5 get 70% off all 5      | Qty                 | 5              | Qty                  | 5               | 0.7                 | 0.0             | Any                    | 1             | Identity                |
     And the following rule settings
-      | Id | Category Id | Product Id | Rule Group Id |
-      | 1  | 1           |            | 1             |
-      | 2  | 2           |            | 1             |
-      | 3  |             | 5          | 1             |
-      | 4  |             | 4          | 1             |
+      | Id | Category Id | Product Id | Rule Group Id | Quantity |
+      | 1  | 1           |            | 1             | 1        |
+      | 2  | 2           |            | 1             | 1        |
+      | 3  |             | 5          | 1             | 1        |
+      | 4  |             | 4          | 1             | 1        |
 
   Scenario: Products are added to shopping cart and discount and total amount evaluated
     When a POST request is sent to "/shoppingCarts"

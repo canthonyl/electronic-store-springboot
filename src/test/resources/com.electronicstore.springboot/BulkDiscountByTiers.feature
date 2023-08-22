@@ -1,4 +1,4 @@
-Feature: Shopping cart with items have applicable discount applied to total
+Feature: Shopping cart with items eligible for multi-tiered bulk discount have appropriate tiers of discounts applied
 
   Background:
     Given the following product categories
@@ -19,13 +19,13 @@ Feature: Shopping cart with items have applicable discount applied to total
       | 2  | Buy 3 get 60% off all 3      | Qty                 | 3              | Qty                  | 3               | 0.6                 | 0.0             | Any                    | 1             | Identity                |
       | 3  | Buy 5 get 70% off all 5      | Qty                 | 5              | Qty                  | 5               | 0.7                 | 0.0             | Any                    | 1             | Identity                |
 
-  Scenario: User added items with quantity discount to shopping cart
+  Scenario: Bulk discount by quantities offering best saving given purchase quantity applied to shopping carts
     Given the following rule settings
-      | Id | Category Id | Product Id | Rule Group Id |
-      | 1  | 1           |            | 1             |
-      | 2  | 2           |            | 1             |
-      | 3  |             | 5          | 1             |
-      | 4  |             | 4          | 1             |
+      | Id | Category Id | Product Id | Rule Group Id | Quantity |
+      | 1  | 1           |            | 1             | 1        |
+      | 2  | 2           |            | 1             | 1        |
+      | 3  |             | 5          | 1             | 1        |
+      | 4  |             | 4          | 1             | 1        |
     And an empty shopping cart with id 1 is created
     When the following items are added to the shopping cart id 1
       | Product Id | Quantity |
@@ -45,11 +45,11 @@ Feature: Shopping cart with items have applicable discount applied to total
 
   Scenario: Multiple lower quantity deals applied if it leads to bigger savings
     Given the following rule settings
-      | Id | Category Id | Product Id | Rule Group Id |
-      | 1  | 1           |            | 1             |
-      | 2  | 2           |            | 1             |
-      | 3  |             | 5          | 1             |
-      | 4  |             | 3          | 1             |
+      | Id | Category Id | Product Id | Rule Group Id | Quantity |
+      | 1  | 1           |            | 1             | 1        |
+      | 2  | 2           |            | 1             | 1        |
+      | 3  |             | 5          | 1             | 1        |
+      | 4  |             | 3          | 1             | 1        |
     And a shopping cart with id 1 is created with the following items
       | Product Id | Quantity |
       | 5          | 6        |
