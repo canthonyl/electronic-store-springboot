@@ -118,12 +118,9 @@ public class DealMatchService {
 
         public void setAllRule(List<DiscountRule> rules) {
             allRules = rules.stream()
-                    .filter(d ->
-                            // applicableByProduct(d, catId, productId, ruleGroupCoveredCategories, ruleGroupCoveredProducts)
-                            d.getThresholdProductType() == ThresholdProductType.Any ||
-                                    productByCatId.keySet().containsAll(ruleGroupCoveredCategories.get(d.getRuleGroupId()))
-                                            && productById.keySet().containsAll(ruleGroupCoveredProducts.get(d.getRuleGroupId()))
-                    )
+                    .filter(r -> r.getThresholdProductType() == ThresholdProductType.Any ||
+                            Optional.ofNullable(ruleGroupCoveredCategories.get(r.getRuleGroupId())).map(productByCatId.keySet()::containsAll).orElse(true)
+                            && Optional.ofNullable(ruleGroupCoveredProducts.get(r.getRuleGroupId())).map(productById.keySet()::containsAll).orElse(true))
                     .collect(toMap(DiscountRule::getId, Function.identity()));
 
             allRulesByRuleGroupId = allRules.values().stream()
@@ -206,13 +203,23 @@ public class DealMatchService {
                     Double discountAmount = discountDetailsByProduct.get(productId).get(ThresholdType.Amount);
                     Double fillValue = discountDetailsByProduct.get(productId).get(fillType);
                     Map<Long, Map<ThresholdType, Double>> relatedItems = itemDetailsByProductId.get(productId);
-                    Long itemId = relatedItems.entrySet().stream()
+                    Optional<Long> itemId = relatedItems.entrySet().stream()
                             .filter(r -> r.getValue().get(fillType) >= fillValue)
                             .map(Map.Entry::getKey)
-                            .findFirst().get();
-                    relatedItems.remove(itemId);
-                    response.getItemIdToDeals().computeIfAbsent(itemId, id->new LinkedList<>()).add(rule);
-                    response.getItemDiscountAmount().merge(itemId, discountAmount, Double::sum);
+                            .findFirst();
+                    if (itemId.isPresent()) {
+                        if (fillType == ThresholdType.Amount) {
+                            relatedItems.remove(itemId.get());
+                        } else {
+                            Map<ThresholdType, Double> relatedItemDetail = relatedItems.get(itemId.get());
+                            double qtyReduced = fillValue;
+                            double amountReduced = relatedItemDetail.get(ThresholdType.Amount) * (qtyReduced / relatedItemDetail.get(ThresholdType.Qty));
+                            relatedItemDetail.merge(ThresholdType.Qty, qtyReduced * -1, Double::sum);
+                            relatedItemDetail.merge(ThresholdType.Amount, amountReduced * -1, Double::sum);
+                        }
+                        response.getItemIdToDeals().computeIfAbsent(itemId.get(), id->new LinkedList<>()).add(rule);
+                        response.getItemDiscountAmount().merge(itemId.get(), discountAmount, Double::sum);
+                    }
                 }
             }
         }

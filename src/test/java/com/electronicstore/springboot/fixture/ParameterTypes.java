@@ -23,7 +23,6 @@ import static org.assertj.core.util.introspection.CaseFormatUtils.toCamelCase;
 
 public class ParameterTypes {
 
-    private Gson gson = new Gson();
 
     @DataTableType
     public ProductCategory convertProductCategory(Map<String, String> entry) {
@@ -107,7 +106,7 @@ public class ParameterTypes {
     }
 
     private List<String> toList(String s) {
-        String[] array = s.trim().split(",",-1);
+        String[] array = s.trim().replaceAll("[\\[\\]]","").split(",",-1);
         return Arrays.stream(array).map(String::trim).toList();
     }
 
