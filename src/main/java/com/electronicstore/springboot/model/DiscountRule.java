@@ -10,6 +10,8 @@ import jakarta.persistence.SequenceGenerator;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Getter
 @Setter
 @Entity
@@ -17,6 +19,8 @@ public class DiscountRule {
 
     public enum ThresholdType {Qty, Amount}
     public enum ApplicableType {Qty, Amount}
+    public enum ThresholdProductType {Any, All}
+    public enum ApplicableProductType {Identity, All /*,Any?*/}
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "discount_rule_id_seq")
@@ -39,7 +43,15 @@ public class DiscountRule {
 
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    private ThresholdProductType thresholdProductType;
+
     private Long ruleGroupId;
 
+    @Enumerated(EnumType.STRING)
+    private ApplicableProductType applicableProductType;
 
+    private Long applicableRuleGroupId;
+
+    private transient Set<Long> thresholdProductIds;
 }

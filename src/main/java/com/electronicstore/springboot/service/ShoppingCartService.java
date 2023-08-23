@@ -154,10 +154,9 @@ public class ShoppingCartService {
                 i.setAmountBeforeDiscount(i.getQuantity() * product.getPrice());
                 i.setDiscountAmount(0.0);
                 i.setAmount(i.getQuantity() * product.getPrice());
-                request.addCharacteristic(product, DiscountRule.ThresholdType.Qty, i.getQuantity());
-                request.addCharacteristic(product, DiscountRule.ThresholdType.Amount, i.getAmountBeforeDiscount());
+                request.addCharacteristic(product, DiscountRule.ThresholdType.Qty, i.getQuantity(), i.getId());
+                request.addCharacteristic(product, DiscountRule.ThresholdType.Amount, i.getAmountBeforeDiscount(), i.getId());
             }
-            request.addMapping(product, cartItems.stream().map(ShoppingCartItem::getId).toList());
         }
         return dealMatchService.matchDeals(request);
     }

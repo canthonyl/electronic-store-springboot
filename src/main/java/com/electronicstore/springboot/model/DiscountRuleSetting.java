@@ -9,9 +9,6 @@ import jakarta.persistence.SequenceGenerator;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.Set;
-
-
 @Getter
 @Setter
 @Entity
@@ -29,6 +26,8 @@ public class DiscountRuleSetting {
     private Long productId;
 
     private Long ruleGroupId;
+
+    private Integer quantity;
 
     private String setting;
 

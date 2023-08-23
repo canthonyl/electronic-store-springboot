@@ -59,8 +59,11 @@ create table discount_rule(
     applicable_unit_type enum('Qty','Amount') not null,
     applicable_discount numeric(20, 2),
     override_amount numeric(20, 2),
-    description varchar(255),
-    rule_group_id bigint
+    threshold_product_type enum('Any','All') not null,
+    rule_group_id bigint,
+    applicable_product_type enum('Identity', 'All') not null,
+    applicable_rule_group_id bigint,
+    description varchar(255)
 );
 
 --TODO index for lookup
@@ -69,7 +72,9 @@ create table discount_rule_setting(
     rule_group_id bigint not null,
     category_id bigint,
     product_id bigint,
-    setting json(10000)
+    quantity int,
+    setting json(10000),
+    description varchar(255)
 );
 
 

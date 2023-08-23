@@ -14,11 +14,4 @@ public class ShoppingCartResponse {
         shoppingCart = s;
     }
 
-    public ShoppingCart getShoppingCart() {
-        return shoppingCart;
-    }
-
-    public void setShoppingCart(ShoppingCart shoppingCart) {
-        this.shoppingCart = shoppingCart;
-    }
 }
