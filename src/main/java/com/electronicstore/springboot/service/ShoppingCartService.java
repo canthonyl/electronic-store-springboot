@@ -162,7 +162,6 @@ public class ShoppingCartService {
     }
 
     public void refreshShoppingCart(ShoppingCart cart) {
-        System.out.println("refreshShoppingCart...");
         Map<Long, Product> products = productService.getProducts(cart.getItems().stream().map(ShoppingCartItem::getProductId).toList())
                 .stream().collect(toMap(Product::getId, Function.identity()));
 

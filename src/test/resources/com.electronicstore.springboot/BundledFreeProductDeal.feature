@@ -14,7 +14,7 @@ Feature: Free products offered in bundled deal incur zero cost
       | 4  | iPad Pro            | Apple iPad Pro             | 7000.00  | 3           |
       | 5  | Bluetooth Mouse     | Logitech bluetooth mouse   | 1598.00  | 3           |
 
-  Scenario: A bundled deal offering free item result in that item's cost reduced to zero in shopping cart
+  Scenario: A bundled deal offering free item result in item cost reduced to zero
     Given the following rule settings
       | Id | Category Id | Product Id | Rule Group Id | Quantity | Description                    |
       | 1  |             | 2          | 1             | 1        | Desktop Bundled                |
