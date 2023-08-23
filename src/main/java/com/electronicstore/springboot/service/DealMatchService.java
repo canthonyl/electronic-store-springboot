@@ -14,12 +14,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
@@ -71,7 +76,7 @@ public class DealMatchService {
         List<DiscountRuleSetting> allRuleSettings;
         Map<Long, Set<Long>> ruleGroupCoveredCategories;
         Map<Long, Set<Long>> ruleGroupCoveredProducts;
-        Map<Long, Map<Long, Integer>> ruleGroupProductQuantity;
+        Map<Long, CategoryValueMap<Long, ThresholdType>> ruleGroupProductQuantity;
         Set<Long> ruleGroupIds;
 
         Map<Long, DiscountRule> allRules;
@@ -103,13 +108,13 @@ public class DealMatchService {
 
             ruleGroupProductQuantity = new HashMap<>();
             for (DiscountRuleSetting ruleSetting : allRuleSettings) {
-                Map<Long, Integer> ruleQuantities = ruleGroupProductQuantity.computeIfAbsent(ruleSetting.getRuleGroupId(), r -> new HashMap<>());
+                CategoryValueMap<Long, ThresholdType> ruleQuantities = ruleGroupProductQuantity.computeIfAbsent(ruleSetting.getRuleGroupId(), r -> new CategoryValueMap<>());
                 if (ruleSetting.getProductId() != null && ruleSetting.getQuantity() != null) {
-                    ruleQuantities.put(ruleSetting.getProductId(), ruleSetting.getQuantity());
+                    ruleQuantities.put(ruleSetting.getProductId(), ThresholdType.Qty, ruleSetting.getQuantity());
                 }
                 if (ruleSetting.getCategoryId() != null && ruleSetting.getQuantity() != null) {
                     productByCatId.get(ruleSetting.getCategoryId()).forEach(p -> {
-                        ruleQuantities.put(p, ruleSetting.getQuantity());
+                        ruleQuantities.put(p, ThresholdType.Qty, ruleSetting.getQuantity());
                     });
                 }
             }
@@ -126,17 +131,13 @@ public class DealMatchService {
             allRulesByRuleGroupId = allRules.values().stream()
                     .collect(groupingBy(DiscountRule::getRuleGroupId, mapping(Function.identity(), toList())));
         }
-
-
-
-
     }
 
     public DealMatchResponse matchDeals(DealMatchRequest request) {
 
         Set<Long> allCategories = request.getCharacteristic().get(DiscountRuleSetting.Group.category).keySet();
         Set<Long> allProducts = request.getCharacteristic().get(DiscountRuleSetting.Group.product).keySet();
-        Map<Long, Map<ThresholdType, Double>> characteristicsByProductId = request.getCharacteristic().get(DiscountRuleSetting.Group.product);
+        CategoryValueMap<Long, ThresholdType> productQtyAndAmount = new CategoryValueMap<>(request.getCharacteristic().get(DiscountRuleSetting.Group.product));
         Map<Long, Map<Long, Map<ThresholdType, Double>>> itemDetailsByProductId = request.getMapToCartItemId();
 
         DealMatchContext dmc = new DealMatchContext();
@@ -157,68 +158,73 @@ public class DealMatchService {
 
             double savingAmount = 0;
             List<Long> ruleResult = Collections.emptyList();
-            List<Map<Long, Map<ThresholdType, Double>>> ruleResultDiscountDetails = Collections.emptyList();
+            List<CategoryValueMap<Long, ThresholdType>> ruleResultDiscountDetails = Collections.emptyList();
+            CategoryValueMap<Long, ThresholdType> ruleResultChangesToCart = null;
 
             Map<ThresholdType, List<DiscountRule>> rules = ruleIds.stream()
                     .map(dmc.allRules::get)
-                    .filter(r -> applicable(r, dmc, thresholdProducts, characteristicsByProductId))
+                    .filter(r -> applicable(r, dmc, thresholdProducts, productQtyAndAmount))
                     .collect(groupingBy(DiscountRule::getThresholdUnitType, mapping(Function.identity(), toList())));
 
-            double savingAmountCandidate = 0.0;
-            List<Long> bestDeals = new LinkedList<>();
-            List<Map<Long, Map<ThresholdType, Double>>> bestDealsTargetProducts = new LinkedList<>();
-            if (rules.containsKey(ThresholdType.Amount)) {
-                savingAmountCandidate = resolveBestDealsByAmount(rules.get(ThresholdType.Amount), dmc, characteristicsByProductId, thresholdProducts, bestDeals, bestDealsTargetProducts);
-                if (bestDeals.size() > 0) {
-                    if (savingAmountCandidate > savingAmount) {
-                        savingAmount = savingAmountCandidate;
-                        ruleResult = bestDeals;
-                        ruleResultDiscountDetails = bestDealsTargetProducts;
+            if (rules.size() > 0) {
+                double savingAmountCandidate = 0.0;
+                List<Long> bestDeals = new LinkedList<>();
+                List<CategoryValueMap<Long, ThresholdType>> bestDealsTargetProducts = new LinkedList<>();
+                CategoryValueMap<Long, ThresholdType> bestDealsChangesToCart = new CategoryValueMap<>();
+                if (rules.containsKey(ThresholdType.Amount)) {
+                    savingAmountCandidate = resolveBestDealsByAmount(rules.get(ThresholdType.Amount), dmc, productQtyAndAmount, thresholdProducts, bestDeals, bestDealsTargetProducts, bestDealsChangesToCart);
+                    if (bestDeals.size() > 0) {
+                        if (savingAmountCandidate > savingAmount) {
+                            savingAmount = savingAmountCandidate;
+                            ruleResult = bestDeals;
+                            ruleResultDiscountDetails = bestDealsTargetProducts;
+                            ruleResultChangesToCart = bestDealsChangesToCart;
+                        }
                     }
                 }
-            }
 
-            bestDeals = new LinkedList<>();
-            bestDealsTargetProducts = new LinkedList<>();
-            if (rules.containsKey(ThresholdType.Qty)) {
-                savingAmountCandidate = resolveBestDealsByQty(rules.get(ThresholdType.Qty), dmc, characteristicsByProductId, thresholdProducts, bestDeals, bestDealsTargetProducts);
-                if (bestDeals.size() > 0) {
-                    if (savingAmountCandidate > savingAmount) {
-                        savingAmount = savingAmountCandidate;
-                        ruleResult = bestDeals;
-                        ruleResultDiscountDetails = bestDealsTargetProducts;
+                bestDeals = new LinkedList<>();
+                bestDealsTargetProducts = new LinkedList<>();
+                if (rules.containsKey(ThresholdType.Qty)) {
+                    savingAmountCandidate = resolveBestDealsByQty(rules.get(ThresholdType.Qty), dmc, productQtyAndAmount, thresholdProducts, bestDeals, bestDealsTargetProducts, bestDealsChangesToCart);
+                    if (bestDeals.size() > 0) {
+                        if (savingAmountCandidate > savingAmount) {
+                            ruleResult = bestDeals;
+                            ruleResultDiscountDetails = bestDealsTargetProducts;
+                            ruleResultChangesToCart = bestDealsChangesToCart;
+                        }
                     }
                 }
-            }
 
-            //assign deals to items
-            for (int i=0; i < ruleResult.size(); i++) {
-                Long ruleId = ruleResult.get(i);
-                DiscountRule rule = dmc.allRules.get(ruleId);
-                Map<Long, Map<ThresholdType, Double>> discountDetailsByProduct = ruleResultDiscountDetails.get(i);
-                Set<Long> discountProductIds = discountDetailsByProduct.keySet();
-                ThresholdType fillType = rule.getApplicableUnitType() == ApplicableType.Qty ? ThresholdType.Qty : ThresholdType.Amount;
+                productQtyAndAmount.subtract(ruleResultChangesToCart);
 
-                for (Long productId : discountProductIds) {
-                    Double discountAmount = discountDetailsByProduct.get(productId).get(ThresholdType.Amount);
-                    Double fillValue = discountDetailsByProduct.get(productId).get(fillType);
-                    Map<Long, Map<ThresholdType, Double>> relatedItems = itemDetailsByProductId.get(productId);
-                    Optional<Long> itemId = relatedItems.entrySet().stream()
-                            .filter(r -> r.getValue().get(fillType) >= fillValue)
-                            .map(Map.Entry::getKey)
-                            .findFirst();
-                    if (itemId.isPresent()) {
-                        if (fillType == ThresholdType.Amount) {
-                            relatedItems.remove(itemId.get());
-                        } else {
-                            Map<ThresholdType, Double> relatedItemDetail = relatedItems.get(itemId.get());
-                            double qtyReduced = fillValue;
-                            double amountReduced = relatedItemDetail.get(ThresholdType.Amount) * (qtyReduced / relatedItemDetail.get(ThresholdType.Qty));
+                //assign deals to items
+                for (int i = 0; i < ruleResult.size(); i++) {
+                    Long ruleId = ruleResult.get(i);
+                    DiscountRule rule = dmc.allRules.get(ruleId);
+                    CategoryValueMap<Long, ThresholdType> discountDetailsByProduct = ruleResultDiscountDetails.get(i);
+                    Set<Long> discountProductIds = discountDetailsByProduct.entitiesKeySet();
+
+                    for (Long productId : discountProductIds) {
+                        //Map<ThresholdType, Double> discountDetail = discountDetailsByProduct.get(productId);
+                        Double discountAmount = discountDetailsByProduct.get(productId, ThresholdType.Amount).doubleValue();
+                        Long totalQuantityEligibleForDiscount = discountDetailsByProduct.get(productId, ThresholdType.Qty).longValue();
+                        Double discountPerItem = discountAmount / totalQuantityEligibleForDiscount;
+
+                        Map<Long, Map<ThresholdType, Double>> relatedItems = itemDetailsByProductId.get(productId);
+                        Iterator<Long> itemIdIterator = relatedItems.keySet().iterator();
+                        while (totalQuantityEligibleForDiscount > 0L) {
+                            Long itemId = itemIdIterator.next();
+                            Map<ThresholdType, Double> relatedItemDetail = relatedItems.get(itemId);
+                            double qtyReduced = Math.min(relatedItemDetail.get(ThresholdType.Qty), totalQuantityEligibleForDiscount);
+                            double amountReduced = qtyReduced * discountPerItem;
                             relatedItemDetail.merge(ThresholdType.Qty, qtyReduced * -1, Double::sum);
                             relatedItemDetail.merge(ThresholdType.Amount, amountReduced * -1, Double::sum);
+
+                            totalQuantityEligibleForDiscount -= (long) qtyReduced;
+                            response.getItemIdToDeals().computeIfAbsent(itemId, id -> new LinkedList<>()).add(rule);
+                            response.getItemDiscountAmount().merge(itemId, amountReduced, Double::sum);
                         }
-                        response.getItemIdToDeals().computeIfAbsent(itemId.get(), id->new LinkedList<>()).add(rule);
-                        response.getItemDiscountAmount().merge(itemId.get(), discountAmount, Double::sum);
                     }
                 }
             }
@@ -268,208 +274,42 @@ public class DealMatchService {
 
     }
 
-    private double resolveBestDealsByAmount(List<DiscountRule> allDeals, DealMatchContext dmc, Map<Long, Map<ThresholdType, Double>> thresholdValues, Set<Long> thresholdProducts, List<Long> result, List<Map<Long, Map<ThresholdType, Double>>> targetProducts) {
-        Map<Long, Map<Long, Map<ThresholdType, Double>>> ruleDiscountDetails = new HashMap<>();
-        Map<Long, Double> ruleDiscountAmount = new HashMap<>();
+    private double resolveBestDealsByAmount(List<DiscountRule> allDeals, DealMatchContext dmc, CategoryValueMap<Long, ThresholdType> productQtyAndAmount, Set<Long> thresholdProducts, List<Long> bestDealRuleIds, List<CategoryValueMap<Long, ThresholdType>> discountDetailList, CategoryValueMap<Long, ThresholdType> qtyAndAmountAllocatedForDiscount) {
+        long ruleId = 0L;
+        double bestSavingDiscountAmount = 0.0;
+        CategoryValueMap<Long, ThresholdType> discountDetails = new CategoryValueMap<>();
+        CategoryValueMap<Long, ThresholdType> changesToCart = new CategoryValueMap<>();
+
         for (DiscountRule r : allDeals) {
-            Map<Long, Map<ThresholdType, Double>> discountDetail = new HashMap<>();
-            double discountAmount = calculateDiscountAmount(r, dmc, thresholdValues, thresholdProducts, false, discountDetail);
-            ruleDiscountDetails.put(r.getId(), discountDetail);
-            ruleDiscountAmount.put(r.getId(), discountAmount);
-        }
-        Long bestDealRuleId = ruleDiscountAmount.entrySet().stream().max(Comparator.comparingDouble(Map.Entry::getValue)).get().getKey();
-        result.add(bestDealRuleId);
-        targetProducts.add(ruleDiscountDetails.get(bestDealRuleId));
-        return ruleDiscountAmount.get(bestDealRuleId);
-    }
+            CategoryValueMap<Long, ThresholdType> discountDetail = new CategoryValueMap<>();
+            CategoryValueMap<Long, ThresholdType> workingThresholdValues = new CategoryValueMap<>(productQtyAndAmount);
 
-    private double calculateDiscountAmount(DiscountRule r, DealMatchContext dmc, Map<Long, Map<ThresholdType, Double>> thresholdValues, Set<Long> thresholdProducts, boolean updateQuantity, Map<Long, Map<ThresholdType, Double>> discountValues) {
-        Set<Long> applicableProducts = r.getApplicableProductType() == ApplicableProductType.Identity ?
-                thresholdProducts : dmc.ruleGroupCoveredProducts.get(r.getApplicableRuleGroupId());
-        if (r.getOverrideAmount() > 0) {
-            if (r.getThresholdUnitType() == ThresholdType.Amount) {
-                for (Long id : thresholdProducts) {
-                    Map<ThresholdType, Double> discountValue = discountValues.computeIfAbsent(id, i -> new HashMap<>());
-                    discountValue.merge(ThresholdType.Qty, thresholdValues.get(id).get(ThresholdType.Qty), Double::sum);
-                    discountValue.merge(ThresholdType.Amount, r.getOverrideAmount(), Double::sum);
+            double calculatedDiscountAmount = calculateDiscountAmount(r, dmc, workingThresholdValues, thresholdProducts, true, discountDetail);
 
-                    if (updateQuantity) {
-                        thresholdValues.get(id).put(ThresholdType.Qty, 0.0);
-                        thresholdValues.get(id).put(ThresholdType.Amount, 0.0);
-                    }
-                }
-            } else {
-                Map<Long, Integer> thresholdUnitDefinition = dmc.ruleGroupProductQuantity.get(r.getRuleGroupId());
-                Map<Long, Double> quantities = thresholdProducts.stream().collect(toMap(Function.identity(), i -> thresholdValues.get(i).get(ThresholdType.Qty)));
-                long numUnit = numberOfBasketUnit(r.getThresholdUnit(), thresholdUnitDefinition, quantities);
-                if (numUnit > 0L && updateQuantity) {
-                    Map<Long, Map<ThresholdType, Double>> reductionDetails = reductionDetails(numUnit * r.getThresholdUnit(), thresholdValues, thresholdUnitDefinition, thresholdProducts);
-                    reductionDetails.forEach((productId, values) -> {
-                        Map<ThresholdType, Double> currentValues = thresholdValues.get(productId);
-                        currentValues.merge(ThresholdType.Qty, values.get(ThresholdType.Qty)*-1, Double::sum);
-                        currentValues.merge(ThresholdType.Amount, values.get(ThresholdType.Amount)*-1, Double::sum);
-                    });
-                }
+            if (calculatedDiscountAmount > bestSavingDiscountAmount) {
+                ruleId = r.getId();
+                bestSavingDiscountAmount = calculatedDiscountAmount;
+                discountDetails = discountDetail;
+                changesToCart = new CategoryValueMap<>(productQtyAndAmount);
+                changesToCart.subtract(workingThresholdValues);
             }
-            return r.getOverrideAmount();
-        } else {
-            Set<Long> targetProducts = r.getApplicableProductType() == ApplicableProductType.Identity ? thresholdProducts : applicableProducts;
-            double applicableAmount = 0.0;
-
-            if (r.getThresholdUnitType() == ThresholdType.Amount) {
-                applicableAmount = targetProducts.stream().map(thresholdValues::get).mapToDouble(m -> m.get(ThresholdType.Amount)).sum();
-
-                for (Long id : thresholdProducts) {
-                    if (updateQuantity) {
-                        thresholdValues.get(id).put(ThresholdType.Qty, 0.0);
-                        thresholdValues.get(id).put(ThresholdType.Amount, 0.0);
-                    }
-                    Map<ThresholdType, Double> discountValue = discountValues.computeIfAbsent(id, i -> new HashMap<>());
-                    discountValue.merge(ThresholdType.Qty, thresholdValues.get(id).get(ThresholdType.Qty), Double::sum);
-                    discountValue.merge(ThresholdType.Amount, thresholdValues.get(id).get(ThresholdType.Amount) * r.getApplicableDiscount(), Double::sum);
-                }
-
-            } else {
-                Map<Long, Integer> thresholdUnitDefinition = dmc.ruleGroupProductQuantity.get(r.getRuleGroupId());
-                Map<Long, Double> quantities = thresholdProducts.stream().collect(toMap(Function.identity(), i -> thresholdValues.get(i).get(ThresholdType.Qty)));
-                if (r.getApplicableUnitType() == ApplicableType.Qty) {
-                    long unit = numberOfBasketUnit(r.getThresholdUnit(), thresholdUnitDefinition, quantities);
-                    long actualApplyUnit = unit * r.getApplicableUnit();
-
-                    if (actualApplyUnit > 0L) {
-                        Map<Long, Integer> applyUnitDefinition = r.getApplicableProductType() == ApplicableProductType.Identity ? thresholdUnitDefinition : dmc.ruleGroupProductQuantity.get(r.getApplicableRuleGroupId());
-                        applicableAmount = applicableAmountByQty(actualApplyUnit, dmc, targetProducts, r, thresholdValues, applyUnitDefinition);
-
-                        Map<Long, Map<ThresholdType, Double>> targetDiscountDetails = reductionDetails(actualApplyUnit, thresholdValues, applyUnitDefinition, targetProducts);
-                        for (Long id : targetDiscountDetails.keySet()) {
-                            Map<ThresholdType, Double> targetDiscount = targetDiscountDetails.get(id);
-                            Map<ThresholdType, Double> discountValue = discountValues.computeIfAbsent(id, i->new HashMap<>());
-                            discountValue.merge(ThresholdType.Qty, targetDiscount.get(ThresholdType.Qty), Double::sum);
-                            discountValue.merge(ThresholdType.Amount, targetDiscount.get(ThresholdType.Amount) * r.getApplicableDiscount(), Double::sum);
-                        }
-
-                        if (updateQuantity) {
-                            Map<Long, Map<ThresholdType, Double>> reductionDetails = reductionDetails(unit * r.getThresholdUnit(), thresholdValues, thresholdUnitDefinition, thresholdProducts);
-                            reductionDetails.forEach((productId, values) -> {
-                                Map<ThresholdType, Double> currentValues = thresholdValues.get(productId);
-                                currentValues.merge(ThresholdType.Qty, values.get(ThresholdType.Qty)*-1, Double::sum);
-                                currentValues.merge(ThresholdType.Amount, values.get(ThresholdType.Amount)*-1, Double::sum);
-                            });
-                            if (r.getApplicableProductType() != ApplicableProductType.Identity) {
-                                targetDiscountDetails.forEach((productId, values) -> {
-                                    Map<ThresholdType, Double> currentValues = thresholdValues.get(productId);
-                                    currentValues.merge(ThresholdType.Qty, values.get(ThresholdType.Qty)*-1, Double::sum);
-                                    currentValues.merge(ThresholdType.Amount, values.get(ThresholdType.Amount)*-1, Double::sum);
-                                });
-                            }
-                        }
-                    }
-                } else {
-                    if (r.getApplicableProductType() == ApplicableProductType.Identity) {
-                        long unit = numberOfBasketUnit(r.getThresholdUnit(), thresholdUnitDefinition, quantities);
-                        if (unit > 0L) {
-                            double actualApplicableAmount = 0.0;
-                            for (Long id : quantities.keySet()) {
-                                double productAmount = thresholdValues.get(id).get(ThresholdType.Amount);
-                                actualApplicableAmount += productAmount * quantities.get(id) * unit / thresholdValues.get(id).get(ThresholdType.Qty);
-                            }
-                            applicableAmount = Math.min(r.getApplicableUnit(), actualApplicableAmount);
-                            Map<Long, Map<ThresholdType, Double>> reductionDetails = reductionDetails(unit * r.getThresholdUnit(), thresholdValues, thresholdUnitDefinition, thresholdProducts);
-                            for (Long id : reductionDetails.keySet()) {
-                                Map<ThresholdType, Double> targetDiscount = reductionDetails.get(id);
-                                Map<ThresholdType, Double> discountValue = discountValues.get(id);
-                                discountValue.merge(ThresholdType.Qty, targetDiscount.get(ThresholdType.Qty), Double::sum);
-                                discountValue.merge(ThresholdType.Amount, targetDiscount.get(ThresholdType.Amount), Double::sum);
-                            }
-                            if (updateQuantity) {
-                                reductionDetails.forEach((productId, values) -> {
-                                    Map<ThresholdType, Double> currentValues = thresholdValues.get(productId);
-                                    currentValues.merge(ThresholdType.Qty, values.get(ThresholdType.Qty)*-1, Double::sum);
-                                    currentValues.merge(ThresholdType.Amount, values.get(ThresholdType.Amount)*-1, Double::sum);
-                                });
-                            }
-                        }
-                    } else {
-                        long unit = numberOfBasketUnit(r.getThresholdUnit(), thresholdUnitDefinition, quantities);
-                        if (unit > 0L) {
-                            double actualApplicableAmount = 0.0;
-                            for (Long id : targetProducts) {
-                                Map<ThresholdType, Double> targetValues = thresholdValues.get(id);
-
-                                Map<ThresholdType, Double> discountValue = discountValues.computeIfAbsent(id, i -> new HashMap<>());
-                                discountValue.merge(ThresholdType.Qty, targetValues.get(ThresholdType.Qty), Double::sum);
-                                discountValue.merge(ThresholdType.Amount, targetValues.get(ThresholdType.Amount), Double::sum);
-
-                                actualApplicableAmount += targetValues.get(ThresholdType.Amount);
-                            }
-                            applicableAmount = Math.min(r.getApplicableUnit(), actualApplicableAmount);
-
-                            if (updateQuantity) {
-                                Map<Long, Map<ThresholdType, Double>> reductionDetails = reductionDetails(unit * r.getThresholdUnit(), thresholdValues, thresholdUnitDefinition, thresholdProducts);
-                                reductionDetails.forEach((productId, values) -> {
-                                    Map<ThresholdType, Double> currentValues = thresholdValues.get(productId);
-                                    currentValues.merge(ThresholdType.Qty, values.get(ThresholdType.Qty)*-1, Double::sum);
-                                    currentValues.merge(ThresholdType.Amount, values.get(ThresholdType.Amount)*-1, Double::sum);
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-
-            return applicableAmount * r.getApplicableDiscount();
         }
+
+        bestDealRuleIds.add(ruleId);
+        discountDetailList.add(discountDetails);
+        qtyAndAmountAllocatedForDiscount.add(changesToCart);
+
+        return bestSavingDiscountAmount;
     }
 
-    private double applicableAmountByQty(long actualApplyUnit, DealMatchContext dmc, Set<Long> applyProductIds, DiscountRule rule, Map<Long, Map<ThresholdType, Double>> thresholdValues, Map<Long, Integer> applyUnitDefinition) {
-        double totalApplicableAmount = 0.0;
-        for (Long productId : applyProductIds) {
-            long applicableUnit = applyUnitDefinition.get(productId) * actualApplyUnit;
-            double totalUnit = thresholdValues.get(productId).get(ThresholdType.Qty);
-            double ratio = applicableUnit / totalUnit;
-            double productApplicableAmount = ratio * thresholdValues.get(productId).get(ThresholdType.Amount);
-            totalApplicableAmount += productApplicableAmount;
-        }
-        return totalApplicableAmount;
-    }
-
-
-    private long numberOfBasketUnit(long basketMultiplier, Map<Long, Integer> basketQuantities, Map<Long, Double> actualQuantities) {
-        long ratio = Long.MAX_VALUE;
-        for (Long productId : actualQuantities.keySet()) {
-            long basketQuantity = basketQuantities.get(productId) * basketMultiplier;
-            long quantity = actualQuantities.get(productId).longValue();
-            ratio = Math.min(quantity / basketQuantity, ratio);
-            if (ratio == 0L) break;
-        }
-        return ratio;
-    }
-
-
-    private Map<Long, Map<ThresholdType, Double>> reductionDetails(long numberOfUnits, Map<Long, Map<ThresholdType,Double>> thresholdValues, Map<Long, Integer> thresholdUnitDefinition, Set<Long> productIds) {
-        Map<Long, Map<ThresholdType, Double>> result = new HashMap<>();
-        for (Long id : productIds) {
-            Map<ThresholdType,Double> values = thresholdValues.get(id);
-            double currentQty = values.get(ThresholdType.Qty);
-            double currentAmount = values.get(ThresholdType.Amount);
-            double quantityReduced = numberOfUnits * thresholdUnitDefinition.get(id);
-            double amountReduced = currentAmount * (quantityReduced / currentQty);
-
-            Map<ThresholdType, Double> discountValues = new HashMap<>();
-            discountValues.put(ThresholdType.Qty, quantityReduced);
-            discountValues.put(ThresholdType.Amount, amountReduced);
-            result.put(id, discountValues);
-        }
-        return result;
-    }
-
-    private double resolveBestDealsByQty(List<DiscountRule> qtyTriggerDeals, DealMatchContext dmc, Map<Long, Map<ThresholdType, Double>> thresholdValues, Set<Long> thresholdProducts, List<Long> result, List<Map<Long, Map<ThresholdType, Double>>> discountDetails) {
+    private double resolveBestDealsByQty(List<DiscountRule> qtyTriggerDeals, DealMatchContext dmc, CategoryValueMap<Long, ThresholdType> productQtyAndAmount, Set<Long> thresholdProducts, List<Long> result, List<CategoryValueMap<Long, ThresholdType>> discountDetails, CategoryValueMap<Long, ThresholdType> resultChangesToCart) {
         //assume amount based discount are exclusive to one another while quantity based are not
         double bestSavingAmount = 0.0;
         Set<Long> bestDealSelectedRules = Collections.emptySet();
-        Map<Long, Map<Long, Map<ThresholdType, Double>>> bestDealDiscountDetails = Collections.emptyMap();
+        Map<Long, CategoryValueMap<Long, ThresholdType>> bestDealDiscountDetails = Collections.emptyMap();
+        CategoryValueMap<Long, ThresholdType> bestDealChangeToCart = null;
 
-        Comparator<DiscountRule> comparator = Comparator.comparingDouble(r -> calculateDiscountAmount(r, dmc, thresholdValues, thresholdProducts, false, new HashMap<>()));
+        Comparator<DiscountRule> comparator = Comparator.comparingDouble(r -> calculateDiscountAmount(r, dmc, productQtyAndAmount, thresholdProducts, false, new CategoryValueMap<>()));
 
         List<DiscountRule> sorted = qtyTriggerDeals.stream()
                 .sorted(comparator.reversed())
@@ -480,19 +320,14 @@ public class DealMatchService {
 
             double selectedRulesSavingAmount = 0.0;
             Set<Long> selectedRules = new HashSet<>();
-            Map<Long, Map<Long, Map<ThresholdType, Double>>> selectedRulesDiscountValues = new HashMap<>();
+            Map<Long, CategoryValueMap<Long, ThresholdType>> selectedRulesDiscountValues = new HashMap<>();
 
-            Map<Long, Map<ThresholdType, Double>> workingValues = new HashMap<>();
-            for (Long id : thresholdValues.keySet()) {
-                workingValues.put(id, new HashMap<>(thresholdValues.get(id)));
-            }
+            CategoryValueMap<Long, ThresholdType> workingValues = new CategoryValueMap<>(productQtyAndAmount);
 
-            while (j < sorted.size()
-                    && thresholdProducts.stream().map(workingValues::get).mapToDouble(m->m.get(ThresholdType.Qty)).sum() > 0.0
-            ) {
+            while (j < sorted.size() && workingValues.sum(thresholdProducts, ThresholdType.Qty).doubleValue() > 0.0) {
                 DiscountRule currentRule = sorted.get(j);
                 if (applicable(currentRule, dmc, thresholdProducts, workingValues)) {
-                    Map<Long, Map<ThresholdType, Double>> discountValues = new HashMap<>();
+                    CategoryValueMap<Long, ThresholdType> discountValues = new CategoryValueMap<>();
                     double savingAmount = calculateDiscountAmount(currentRule, dmc, workingValues, thresholdProducts, true, discountValues);
                     if (savingAmount > 0) {
                         selectedRulesSavingAmount += savingAmount;
@@ -506,6 +341,8 @@ public class DealMatchService {
                 bestSavingAmount = selectedRulesSavingAmount;
                 bestDealSelectedRules = selectedRules;
                 bestDealDiscountDetails = selectedRulesDiscountValues;
+                bestDealChangeToCart = new CategoryValueMap<>(productQtyAndAmount);
+                bestDealChangeToCart.subtract(workingValues);
             }
         }
 
@@ -513,24 +350,343 @@ public class DealMatchService {
             result.add(ruleId);
             discountDetails.add(bestDealDiscountDetails.get(ruleId));
         }
+        resultChangesToCart.add(bestDealChangeToCart);
         return bestSavingAmount;
     }
 
-    private boolean applicable(DiscountRule rule, DealMatchContext dmc, Set<Long> productIds, Map<Long, Map<ThresholdType, Double>> characteristicsByProductId) {
-        double threshold = 0.0;
-        double value = 0.0;
+    private double calculateDiscountAmount(DiscountRule r, DealMatchContext dmc, CategoryValueMap<Long, ThresholdType> thresholdValues, Set<Long> thresholdProducts, boolean updateQuantity, CategoryValueMap<Long, ThresholdType> discountValues) {
+        Long applicableRuleGroupId = r.getApplicableProductType() == ApplicableProductType.Identity ? r.getRuleGroupId() : r.getApplicableRuleGroupId();
+        Set<Long> applicableProducts = r.getApplicableProductType() == ApplicableProductType.Identity ? thresholdProducts :
+                dmc.ruleGroupCoveredProducts.get(r.getApplicableRuleGroupId());
 
+        CategoryValueMap<Long, ThresholdType> thresholdUnitQty = dmc.ruleGroupProductQuantity.get(r.getRuleGroupId()).scaleTo(r.getThresholdUnit());
+
+        CategoryValueMap<Long, ThresholdType> qtyAndAmountForThreshold = thresholdValues.collect(thresholdProducts);
+        CategoryValueMap<Long, ThresholdType> qtyAndDiscountAmount = thresholdValues.collect(applicableProducts);
+        CategoryValueMap<Long, ThresholdType> qtyAndOriginalAmount = thresholdValues.collect(applicableProducts);
+
+        long units = 0L;
+        if (r.getThresholdUnitType() == ThresholdType.Qty) {
+            CategoryValueMap<Long, ThresholdType> qtyUnitized = qtyAndAmountForThreshold.collect(ThresholdType.Qty);
+            units = qtyUnitized.unitize(thresholdUnitQty);
+            qtyAndAmountForThreshold.scale(qtyUnitized, ThresholdType.Qty);
+        }
+
+        if (r.getApplicableUnitType() == ApplicableType.Qty) {
+            CategoryValueMap<Long, ThresholdType> applicableUnitQty = dmc.ruleGroupProductQuantity.get(applicableRuleGroupId).collect(applicableProducts);
+            applicableUnitQty.scale(units * r.getApplicableUnit());
+            qtyAndDiscountAmount = qtyAndDiscountAmount.scaleTo(applicableUnitQty, ThresholdType.Qty);
+            qtyAndDiscountAmount.compute(ThresholdType.Amount, n -> n.doubleValue() * r.getApplicableDiscount());
+            qtyAndOriginalAmount = qtyAndOriginalAmount.scaleTo(applicableUnitQty, ThresholdType.Qty);
+        } else {
+            if (Optional.ofNullable(r.getOverrideAmount()).orElse(0.0) > 0) {
+                double totalAmount = qtyAndDiscountAmount.sum(ThresholdType.Amount).doubleValue();
+                double totalAmountApplicable = r.getOverrideAmount();
+                qtyAndDiscountAmount.compute(ThresholdType.Amount, amount -> amount.doubleValue() / totalAmount * totalAmountApplicable);
+            } else {
+                double totalAmount = qtyAndDiscountAmount.sum(ThresholdType.Amount).doubleValue();
+                double totalAmountApplicable = Math.min(r.getApplicableUnit(), totalAmount) * r.getApplicableDiscount();
+                qtyAndDiscountAmount.compute(ThresholdType.Amount, amount -> amount.doubleValue() / totalAmount * totalAmountApplicable);
+            }
+        }
+
+        if (updateQuantity) {
+            thresholdValues.subtract(qtyAndAmountForThreshold);
+            if (!r.getRuleGroupId().equals(applicableRuleGroupId)) {
+                thresholdValues.subtract(qtyAndOriginalAmount);
+            }
+        }
+
+        discountValues.add(qtyAndDiscountAmount);
+
+        return qtyAndDiscountAmount.sum(ThresholdType.Amount).doubleValue();
+    }
+
+    private boolean applicable(DiscountRule rule, DealMatchContext dmc, Set<Long> productIds, CategoryValueMap<Long, ThresholdType> productValues) {
         ThresholdType thresholdType = rule.getThresholdUnitType();
+        boolean result = false;
         switch (thresholdType) {
             case Qty -> {
-                Map<Long, Integer> ruleProductQuantity = dmc.ruleGroupProductQuantity.get(rule.getRuleGroupId());
-                threshold = productIds.stream().mapToDouble(ruleProductQuantity::get).sum();
-                threshold *= rule.getThresholdUnit();
+                CategoryValueMap<Long, ThresholdType> thresholdQuantities = dmc.ruleGroupProductQuantity.get(rule.getRuleGroupId()).collect(productIds).scaleTo(rule.getThresholdUnit());
+                result = productValues.greaterThanEqualTo(thresholdQuantities, ThresholdType.Qty);
             }
-            case Amount -> threshold = rule.getThresholdUnit();
+            case Amount -> {
+                result = productValues.sum(productIds, ThresholdType.Amount).doubleValue() >= rule.getThresholdUnit();
+            }
         }
-        value = productIds.stream().map(characteristicsByProductId::get).mapToDouble(m -> m.get(thresholdType)).sum();
-        return value >= threshold;
+        return result;
+    }
+
+    class CategoryValueMap<Entity, Dimension> {
+
+        private final Map<Entity, Map<Dimension, Number>> valueMap = new HashMap<>();
+        private final Predicate<Entity> allEntities = entity -> true;
+        private final Function<Dimension, Predicate<Dimension>> specificDimensions = dim -> (d -> d.equals(dim));
+
+        public CategoryValueMap() {}
+
+        public CategoryValueMap(CategoryValueMap<Entity, Dimension> o) {
+            o.forEach(this::put);
+        }
+
+        public <T extends Number> CategoryValueMap(Map<Entity, Map<Dimension, T>> o){
+            o.forEach((entity, dimensionValueMap) -> dimensionValueMap.forEach((dimension, value) -> this.put(entity, dimension, value)));
+        }
+
+        public Number get(Entity entity, Dimension dim) {
+            return Optional.ofNullable(valueMap.get(entity)).map(m -> m.get(dim)).orElse(0.0);
+        }
+
+        public void put(Entity entity, Dimension dim, Number val) {
+            get(entity).put(dim, val);
+        }
+
+        public void compute(Dimension dimension, Function<Number, Number> computeFunction) {
+            forEachFilteredDimensionEntry(allEntities, specificDimensions.apply(dimension), (entity, dimensionEntry) -> dimensionEntry.setValue(computeFunction.apply(dimensionEntry.getValue())));
+        }
+
+        public void compute(Collection<Entity> collection, Dimension dimension, Function<Number, Number> computeFunction) {
+            forEachFilteredDimensionEntry(filterIfPresent(collection), specificDimensions.apply(dimension), (entity, dimensionEntry) -> dimensionEntry.setValue(computeFunction.apply(dimensionEntry.getValue())));
+        }
+
+        private void merge(Entity entity, Dimension dimension, Number b, BiFunction<Number, Number, Number> mergeOperation) {
+            Number a = get(entity).getOrDefault(dimension, 0.0);
+            Number newValue = mergeOperation.apply(a, b);
+            put(entity, dimension, newValue);
+        }
+
+        public void merge(CategoryValueMap<Entity, Dimension> operand, Dimension dimension, BiFunction<Number, Number, Number> mergeOperation) {
+            //operand.forEachFiltered(allEntities, specificDimensions.apply(dimension), (e, d, v) -> merge(e, d, v, mergeOperation));
+            operand.forEachFilteredDimensionEntry(allEntities, dim -> dim.equals(dimension), (entity, dimEntry) -> this.merge(entity, dimension, dimEntry.getValue(), mergeOperation));
+        }
+
+        private void merge(CategoryValueMap<Entity, Dimension> operand, BiFunction<Number, Number, Number> mergeOperation) {
+            operand.forEach((e, d, v) -> merge(e, d, v, mergeOperation));
+        }
+
+        public void add(Entity entity, Dimension dim, Number val) {
+            get(entity).merge(dim, val, (a,b) -> a.doubleValue() + b.doubleValue());
+        }
+
+        public void add(CategoryValueMap<Entity, Dimension> operand) {
+            merge(operand, (a,b) -> a.doubleValue() + b.doubleValue());
+        }
+
+        public void add(CategoryValueMap<Entity, Dimension> operand, Dimension dimension) {
+            merge(operand, dimension, (a,b) -> a.doubleValue() + b.doubleValue());
+        }
+
+        public void subtract(CategoryValueMap<Entity, Dimension> operand) {
+            merge(operand, (a,b) -> a.doubleValue() - b.doubleValue());
+        }
+
+        public void subtract(CategoryValueMap<Entity, Dimension> operand, Dimension dimension) {
+            merge(operand, dimension, (a,b) -> a.doubleValue() - b.doubleValue());
+        }
+
+        public CategoryValueMap<Entity, Dimension> scaleTo(Number operand) {
+            CategoryValueMap<Entity, Dimension> result = new CategoryValueMap<>();
+            forEach((entity, dimension, value) -> result.put(entity, dimension, value.doubleValue() * operand.doubleValue()));
+            return result;
+        }
+
+        public CategoryValueMap<Entity, Dimension> scaleTo(CategoryValueMap<Entity, Dimension> scaleMap, Dimension scalingDimension) {
+            CategoryValueMap<Entity, Dimension> result = new CategoryValueMap<>();
+            forEach((entity, dimension, value) -> {
+                double factor = scaleMap.get(entity, scalingDimension).doubleValue() / this.get(entity, scalingDimension).doubleValue();
+                double newValue = value.doubleValue() * factor;
+                result.put(entity, dimension, newValue);
+            });
+            return result;
+        }
+
+        public void scale(CategoryValueMap<Entity, Dimension> scaleMap, Dimension scalingDimension) {
+            forEachDimensionEntry((entity, dimensionEntry) -> {
+                double factor = scaleMap.get(entity, scalingDimension).doubleValue() / this.get(entity, scalingDimension).doubleValue();
+                dimensionEntry.setValue(dimensionEntry.getValue().doubleValue() * factor);
+            });
+        }
+
+        public void scale(Number operand) {
+            forEachValue((entity, dimension, value) -> value.doubleValue() * operand.doubleValue());
+        }
+
+        //quantized values in all dimensions to multiples of unit definition, returning number of units
+        public long unitize(CategoryValueMap<Entity, Dimension> unitDefinition, Dimension... dimensions) {
+            long numUnits = zipStream(this, unitDefinition, (baseValue, joinValue) -> new ZipEntryValue(baseValue, joinValue))
+                    .filter(zipEntry -> filterIfPresent(Set.of(dimensions)).test(zipEntry.dimension))
+                    .map(ZipEntry::getValues)
+                    .mapToLong(ZipEntryValue::divideAsLong)
+                    .min()
+                    .orElse(0L);
+
+            forEachFilteredValue(allEntities, filterIfPresent(Set.of(dimensions)), (entity, dimension, value) -> numUnits * unitDefinition.get(entity, dimension).doubleValue());
+            return numUnits;
+        }
+
+        public Set<Entity> entitiesKeySet() {
+            return valueMap.keySet();
+        }
+
+        public CategoryValueMap<Entity, Dimension> collect(Collection<Entity> entities, Dimension... categories) {
+            CategoryValueMap<Entity, Dimension> result = new CategoryValueMap<>();
+            //forEachFiltered(entities::contains, filterIfPresent(Set.of(categories)), result::put);
+            forEachFilteredDimensionEntry(entities::contains, filterIfPresent(Set.of(categories)), (entity, dimEntry) -> {
+                result.put(entity, dimEntry.getKey(), dimEntry.getValue());
+            });
+            return result;
+        }
+
+        public CategoryValueMap<Entity, Dimension> collect(Dimension... categories) {
+            CategoryValueMap<Entity, Dimension> result = new CategoryValueMap<>();
+            //forEachFiltered(allEntities, filterIfPresent(Set.of(categories)), result::put);
+            forEachFilteredDimensionEntry(allEntities, filterIfPresent(Set.of(categories)), (entity, dimEntry) -> {
+                result.put(entity, dimEntry.getKey(), dimEntry.getValue());
+            });
+            return result;
+        }
+
+        public void forEach(ValueConsumer<Entity, Dimension> consumer) {
+            valueMap.forEach((entity, dimMap) -> dimMap.forEach((dim, val) -> consumer.accept(entity, dim, val)));
+        }
+
+        public void forEachValue(ValueMapper<Entity, Dimension> mapper) {
+            forEachDimensionEntry((entity, dimensionEntry) -> dimensionEntry.setValue(mapper.accept(entity, dimensionEntry.getKey(), dimensionEntry.getValue())));
+        }
+
+        public void forEachFilteredValue(Predicate<Dimension> dimensionPredicate, ValueMapper<Entity, Dimension> mapper) {
+            forEachFilteredDimensionEntry(allEntities, dimensionPredicate, (entity, dimensionEntry) -> dimensionEntry.setValue(mapper.accept(entity, dimensionEntry.getKey(), dimensionEntry.getValue())));
+        }
+
+        public void forEachFilteredValue(Predicate<Entity> entityPredicate, Predicate<Dimension> dimensionPredicate, ValueMapper<Entity, Dimension> mapper) {
+            forEachFilteredDimensionEntry(entityPredicate, dimensionPredicate, (entity, dimensionEntry) -> dimensionEntry.setValue(mapper.accept(entity, dimensionEntry.getKey(), dimensionEntry.getValue())));
+        }
+
+        public Number sum(Dimension dim) {
+            return sum(allEntities, dim);
+        }
+
+        public Number sum(Predicate<Entity> predicate, Dimension dim) {
+            return valueMap.entrySet().stream().filter(e -> predicate.test(e.getKey()))
+                    .map(e -> e.getValue().get(dim))
+                    .reduce(CategoryValueMap::addAsDouble)
+                    .orElse(0.0);
+        }
+
+        public Number sum(Collection<Entity> filter, Dimension dim) {
+            return filter.stream()
+                    .map(e -> valueMap.get(e))
+                    .filter(Objects::nonNull)
+                    .map(m -> m.get(dim))
+                    .reduce(CategoryValueMap::addAsDouble)
+                    .orElse(0.0);
+        }
+
+        public boolean greaterThanEqualTo(CategoryValueMap<Entity, Dimension> other, Dimension dim) {
+            return zipStream(other, this, (baseValue, joinValue) -> new ZipEntryValue(joinValue, baseValue))
+                    .filter(zipEntry -> zipEntry.dimension.equals(dim))
+                    .map(ZipEntry::getValues)
+                    .allMatch(ZipEntryValue::greaterThanOrEqual);
+        }
+
+        private Map<Dimension, Number> get(Entity entity) {
+            return valueMap.computeIfAbsent(entity, e -> new HashMap<>());
+        }
+
+        private void forEachDimensionEntry(DimensionEntryConsumer<Entity, Dimension> consumer) {
+            valueMap.forEach((e, m) -> m.entrySet().forEach(entry -> consumer.accept(e, entry)));
+        }
+
+        private void forEachFilteredDimensionEntry(Predicate<Entity> entityPredicate, Predicate<Dimension> dimensionPredicate, DimensionEntryConsumer<Entity, Dimension> consumer) {
+            valueMap.entrySet().stream()
+                    .filter(entityEntry -> entityPredicate == allEntities || entityPredicate.test(entityEntry.getKey()))
+                    .forEach(entityEntry ->
+                            entityEntry.getValue().entrySet().stream()
+                                    .filter(dimensionEntry -> dimensionPredicate.test(dimensionEntry.getKey()))
+                                    .forEach(dimensionEntry -> consumer.accept(entityEntry.getKey(), dimensionEntry)));
+        }
+
+        /*private void forEachFiltered(Predicate<Entity> entityPredicate, Predicate<Dimension> dimensionPredicate, ValueConsumer<Entity, Dimension> consumer) {
+            forEachFilteredDimensionEntry(entityPredicate, dimensionPredicate, (entity, dimensionEntry) -> consumer.accept(entity, dimensionEntry.getKey(), dimensionEntry.getValue()));
+        }*/
+
+        private <T> Predicate<T> filterIfPresent(Collection<T> c) {
+            return t -> c.size() == 0 || c.contains(t);
+        }
+
+        private Stream<ZipEntry> zipStream(CategoryValueMap<Entity, Dimension> base, CategoryValueMap<Entity, Dimension> join, BiFunction<Number, Number, ZipEntryValue> valueOrder) {
+            return base.valueMap.entrySet()
+                    .stream()
+                    .mapMulti((entityEntry, consumer) ->
+                            entityEntry.getValue().entrySet()
+                                    .stream()
+                                    .map(dimensionEntry -> {
+                                        Entity entity = entityEntry.getKey();
+                                        Dimension dimension = dimensionEntry.getKey();
+                                        Number baseStreamValue = dimensionEntry.getValue();
+                                        Number joinStreamValue = join.get(entity, dimension);
+                                        return new ZipEntry(entity, dimension, valueOrder.apply(baseStreamValue, joinStreamValue));})
+                                    .forEach(consumer));
+        }
+
+        @FunctionalInterface
+        interface ValueConsumer<Entity, Dimension> {
+            void accept(Entity entity, Dimension dimension, Number value);
+        }
+
+        @FunctionalInterface
+        interface ValueMapper<Entity, Dimension> {
+            Number accept(Entity entity, Dimension dimension, Number value);
+        }
+
+        @FunctionalInterface
+        private interface DimensionEntryConsumer<Entity, Dimension> {
+            void accept(Entity entity, Map.Entry<Dimension, Number> dimensionEntry);
+        }
+
+
+        private class ZipEntry {
+            final Entity entity;
+            final Dimension dimension;
+            final ZipEntryValue values;
+
+            ZipEntry(Entity e, Dimension d, ZipEntryValue v) {
+                entity = e;
+                dimension = d;
+                values = v;
+            }
+
+            ZipEntryValue getValues(){
+                return values;
+            }
+        }
+
+
+        private class ZipEntryValue {
+            final Number val1;
+            final Number val2;
+
+            ZipEntryValue(Number v1, Number v2) {
+                val1 = v1;
+                val2 = v2;
+            }
+
+            boolean greaterThanOrEqual() {
+                return val1.doubleValue() >= val2.doubleValue();
+            }
+
+            double sum(){
+                return val1.doubleValue() + val2.doubleValue();
+            }
+
+            long divideAsLong() {
+                return val1.longValue() / val2.longValue();
+            }
+        }
+
+        private static Number addAsDouble(Number n1, Number n2) {
+            return n1.doubleValue() + n2.doubleValue();
+        }
     }
 
 }

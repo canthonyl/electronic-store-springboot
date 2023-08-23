@@ -1,0 +1,37 @@
+Feature: Discount rules and product groups can be modified
+
+  Scenario: A bundled deal offering free item result in that item's cost reduced to zero in shopping cart
+    When a POST request is sent to "/deals" with body
+      """json
+        {
+          "deals": [
+            {
+              "type": "bundled",
+              "description" : "Free Mouse for every Dell Desktop",
+              "products" : {
+                "ruleGroupId": 1
+              },
+              "freeProducts" : {
+                "ruleSetting": [
+                  {"productId": 5, "quantity": 1}
+                ]
+              }
+            },
+            {
+              "type": "bundled",
+              "description" : "Free Mouse for a Macbook pro + iPad Pro purchase",
+              "products" : {
+                "ruleSetting": [
+                    {"productId": 1, "quantity": 1},
+                    {"productId": 4, "quantity": 1}
+                  ]
+                },
+              "freeProducts" : {
+                "ruleSetting": [
+                    {"productId": 5, "quantity": 1}
+                  ]
+               }
+            }
+          ]
+        }
+      """
