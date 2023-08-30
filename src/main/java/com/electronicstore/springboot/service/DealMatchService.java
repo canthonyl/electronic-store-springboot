@@ -40,98 +40,11 @@ import static com.electronicstore.springboot.model.DiscountRule.ApplicableProduc
 public class DealMatchService {
 
     @Autowired
-    private EntityDatastore<DiscountRuleSetting> discountRuleSettingDatastore;
-
-    @Autowired
-    private EntityDatastore<DiscountRule> discountRuleDatastore;
-
-    @Autowired
     private ProductService productService;
 
-    public List<DiscountRuleSetting> lookupRuleByCategoryOrProduct(Collection<Long> catId, Collection<Long> productId) {
-        Map<String, Collection> criteria = new HashMap<>();
-        if (catId.size()>0) {
-            criteria.put("category_id", catId);
-        }
-        if (productId.size()>0) {
-            criteria.put("product_id", productId);
-        }
-        if (criteria.size()>0) {
-            return discountRuleSettingDatastore.findMatchingValuesIn(criteria);
-        } else {
-            return Collections.emptyList();
-        }
-    }
+    @Autowired
+    private DealService dealService;
 
-    public List<DiscountRule> lookupRuleByGroupId(Collection<Long> ruleGroupId) {
-        if (ruleGroupId.size()>0) {
-            return discountRuleDatastore.findMatchingValuesIn("rule_group_id", ruleGroupId);
-        } else {
-            return Collections.emptyList();
-        }
-    }
-
-    class DealMatchContext {
-
-        List<DiscountRuleSetting> allRuleSettings;
-        Map<Long, Set<Long>> ruleGroupCoveredCategories;
-        Map<Long, Set<Long>> ruleGroupCoveredProducts;
-        Map<Long, CategoryValueMap<Long, ThresholdType>> ruleGroupProductQuantity;
-        Set<Long> ruleGroupIds;
-
-        Map<Long, DiscountRule> allRules;
-        Map<Long, List<DiscountRule>> allRulesByRuleGroupId;
-
-        Map<Long, Product> productById;
-        Map<Long, Set<Long>> productByCatId;
-
-        DealMatchContext() { }
-
-        public void setProducts(List<Product> products) {
-            productById = products.stream().collect(toMap(Product::getId, Function.identity()));
-            productByCatId = productById.values().stream().collect(groupingBy(Product::getCategoryId, mapping(Product::getId, toSet())));
-        }
-
-        public void setAllRuleSettings(List<DiscountRuleSetting> ruleSettings) {
-            allRuleSettings = ruleSettings;
-
-            ruleGroupCoveredCategories = allRuleSettings.stream()
-                    .filter(s -> s.getCategoryId() != null)
-                    .collect(groupingBy(DiscountRuleSetting::getRuleGroupId, mapping(DiscountRuleSetting::getCategoryId, toSet())));
-
-            ruleGroupCoveredProducts = allRuleSettings.stream()
-                    .filter(s -> s.getProductId() != null)
-                    .collect(groupingBy(DiscountRuleSetting::getRuleGroupId, mapping(DiscountRuleSetting::getProductId, toSet())));
-
-            ruleGroupIds = allRuleSettings.stream()
-                    .map(DiscountRuleSetting::getRuleGroupId).collect(toSet());
-
-            ruleGroupProductQuantity = new HashMap<>();
-            for (DiscountRuleSetting ruleSetting : allRuleSettings) {
-                CategoryValueMap<Long, ThresholdType> ruleQuantities = ruleGroupProductQuantity.computeIfAbsent(ruleSetting.getRuleGroupId(), r -> new CategoryValueMap<>());
-                if (ruleSetting.getProductId() != null && ruleSetting.getQuantity() != null) {
-                    ruleQuantities.put(ruleSetting.getProductId(), ThresholdType.Qty, ruleSetting.getQuantity());
-                }
-                if (ruleSetting.getCategoryId() != null && ruleSetting.getQuantity() != null) {
-                    productByCatId.get(ruleSetting.getCategoryId()).forEach(p -> {
-                        ruleQuantities.put(p, ThresholdType.Qty, ruleSetting.getQuantity());
-                    });
-                }
-            }
-
-        }
-
-        public void setAllRule(List<DiscountRule> rules) {
-            allRules = rules.stream()
-                    .filter(r -> r.getThresholdProductType() == ThresholdProductType.Any ||
-                            Optional.ofNullable(ruleGroupCoveredCategories.get(r.getRuleGroupId())).map(productByCatId.keySet()::containsAll).orElse(true)
-                            && Optional.ofNullable(ruleGroupCoveredProducts.get(r.getRuleGroupId())).map(productById.keySet()::containsAll).orElse(true))
-                    .collect(toMap(DiscountRule::getId, Function.identity()));
-
-            allRulesByRuleGroupId = allRules.values().stream()
-                    .collect(groupingBy(DiscountRule::getRuleGroupId, mapping(Function.identity(), toList())));
-        }
-    }
 
     public DealMatchResponse matchDeals(DealMatchRequest request) {
 
@@ -142,8 +55,8 @@ public class DealMatchService {
 
         DealMatchContext dmc = new DealMatchContext();
         dmc.setProducts(productService.getProducts(allProducts));
-        dmc.setAllRuleSettings(lookupRuleByCategoryOrProduct(allCategories, allProducts));
-        dmc.setAllRule(lookupRuleByGroupId(dmc.ruleGroupIds));
+        dmc.setAllRuleSettings(dealService.lookupRuleByCategoryOrProduct(allCategories, allProducts));
+        dmc.setAllRule(dealService.lookupRuleByGroupId(dmc.ruleGroupIds));
 
         Map<Long, Set<Long>> productSelection = new HashMap<>();
         Map<Long, Set<Long>> selectionIdToDiscountRules = new HashMap<>();
@@ -686,6 +599,68 @@ public class DealMatchService {
 
         private static Number addAsDouble(Number n1, Number n2) {
             return n1.doubleValue() + n2.doubleValue();
+        }
+    }
+
+    class DealMatchContext {
+
+        List<DiscountRuleSetting> allRuleSettings;
+        Map<Long, Set<Long>> ruleGroupCoveredCategories;
+        Map<Long, Set<Long>> ruleGroupCoveredProducts;
+        Map<Long, CategoryValueMap<Long, ThresholdType>> ruleGroupProductQuantity;
+        Set<Long> ruleGroupIds;
+
+        Map<Long, DiscountRule> allRules;
+        Map<Long, List<DiscountRule>> allRulesByRuleGroupId;
+
+        Map<Long, Product> productById;
+        Map<Long, Set<Long>> productByCatId;
+
+        DealMatchContext() { }
+
+        public void setProducts(List<Product> products) {
+            productById = products.stream().collect(toMap(Product::getId, Function.identity()));
+            productByCatId = productById.values().stream().collect(groupingBy(Product::getCategoryId, mapping(Product::getId, toSet())));
+        }
+
+        public void setAllRuleSettings(List<DiscountRuleSetting> ruleSettings) {
+            allRuleSettings = ruleSettings;
+
+            ruleGroupCoveredCategories = allRuleSettings.stream()
+                    .filter(s -> s.getCategoryId() != null)
+                    .collect(groupingBy(DiscountRuleSetting::getRuleGroupId, mapping(DiscountRuleSetting::getCategoryId, toSet())));
+
+            ruleGroupCoveredProducts = allRuleSettings.stream()
+                    .filter(s -> s.getProductId() != null)
+                    .collect(groupingBy(DiscountRuleSetting::getRuleGroupId, mapping(DiscountRuleSetting::getProductId, toSet())));
+
+            ruleGroupIds = allRuleSettings.stream()
+                    .map(DiscountRuleSetting::getRuleGroupId).collect(toSet());
+
+            ruleGroupProductQuantity = new HashMap<>();
+            for (DiscountRuleSetting ruleSetting : allRuleSettings) {
+                CategoryValueMap<Long, ThresholdType> ruleQuantities = ruleGroupProductQuantity.computeIfAbsent(ruleSetting.getRuleGroupId(), r -> new CategoryValueMap<>());
+                if (ruleSetting.getProductId() != null && ruleSetting.getQuantity() != null) {
+                    ruleQuantities.put(ruleSetting.getProductId(), ThresholdType.Qty, ruleSetting.getQuantity());
+                }
+                if (ruleSetting.getCategoryId() != null && ruleSetting.getQuantity() != null) {
+                    productByCatId.get(ruleSetting.getCategoryId()).forEach(p -> {
+                        ruleQuantities.put(p, ThresholdType.Qty, ruleSetting.getQuantity());
+                    });
+                }
+            }
+
+        }
+
+        public void setAllRule(List<DiscountRule> rules) {
+            allRules = rules.stream()
+                    .filter(r -> r.getThresholdProductType() == ThresholdProductType.Any ||
+                            Optional.ofNullable(ruleGroupCoveredCategories.get(r.getRuleGroupId())).map(productByCatId.keySet()::containsAll).orElse(true)
+                                    && Optional.ofNullable(ruleGroupCoveredProducts.get(r.getRuleGroupId())).map(productById.keySet()::containsAll).orElse(true))
+                    .collect(toMap(DiscountRule::getId, Function.identity()));
+
+            allRulesByRuleGroupId = allRules.values().stream()
+                    .collect(groupingBy(DiscountRule::getRuleGroupId, mapping(Function.identity(), toList())));
         }
     }
 
