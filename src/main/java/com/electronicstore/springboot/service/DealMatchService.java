@@ -24,9 +24,12 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
 
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
@@ -72,7 +75,7 @@ public class DealMatchService {
             double savingAmount = 0;
             List<Long> ruleResult = Collections.emptyList();
             List<CategoryValueMap<Long, ThresholdType>> ruleResultDiscountDetails = Collections.emptyList();
-            CategoryValueMap<Long, ThresholdType> ruleResultChangesToCart = null;
+            CategoryValueMap<Long, ThresholdType> ruleResultChangesToCart = new CategoryValueMap<>();
 
             Map<ThresholdType, List<DiscountRule>> rules = ruleIds.stream()
                     .map(dmc.allRules::get)
@@ -193,6 +196,7 @@ public class DealMatchService {
         CategoryValueMap<Long, ThresholdType> discountDetails = new CategoryValueMap<>();
         CategoryValueMap<Long, ThresholdType> changesToCart = new CategoryValueMap<>();
 
+
         for (DiscountRule r : allDeals) {
             CategoryValueMap<Long, ThresholdType> discountDetail = new CategoryValueMap<>();
             CategoryValueMap<Long, ThresholdType> workingThresholdValues = new CategoryValueMap<>(productQtyAndAmount);
@@ -220,7 +224,8 @@ public class DealMatchService {
         double bestSavingAmount = 0.0;
         Set<Long> bestDealSelectedRules = Collections.emptySet();
         Map<Long, CategoryValueMap<Long, ThresholdType>> bestDealDiscountDetails = Collections.emptyMap();
-        CategoryValueMap<Long, ThresholdType> bestDealChangeToCart = null;
+        CategoryValueMap<Long, ThresholdType> bestDealChangeToCart = new CategoryValueMap<>();
+
 
         Comparator<DiscountRule> comparator = Comparator.comparingDouble(r -> calculateDiscountAmount(r, dmc, productQtyAndAmount, thresholdProducts, false, new CategoryValueMap<>()));
 
@@ -239,9 +244,11 @@ public class DealMatchService {
 
             while (j < sorted.size() && workingValues.sum(thresholdProducts, ThresholdType.Qty).doubleValue() > 0.0) {
                 DiscountRule currentRule = sorted.get(j);
+
                 if (applicable(currentRule, dmc, thresholdProducts, workingValues)) {
                     CategoryValueMap<Long, ThresholdType> discountValues = new CategoryValueMap<>();
                     double savingAmount = calculateDiscountAmount(currentRule, dmc, workingValues, thresholdProducts, true, discountValues);
+
                     if (savingAmount > 0) {
                         selectedRulesSavingAmount += savingAmount;
                         selectedRules.add(currentRule.getId());
@@ -256,6 +263,7 @@ public class DealMatchService {
                 bestDealDiscountDetails = selectedRulesDiscountValues;
                 bestDealChangeToCart = new CategoryValueMap<>(productQtyAndAmount);
                 bestDealChangeToCart.subtract(workingValues);
+
             }
         }
 
@@ -264,6 +272,7 @@ public class DealMatchService {
             discountDetails.add(bestDealDiscountDetails.get(ruleId));
         }
         resultChangesToCart.add(bestDealChangeToCart);
+
         return bestSavingAmount;
     }
 
@@ -281,16 +290,19 @@ public class DealMatchService {
         long units = 0L;
         if (r.getThresholdUnitType() == ThresholdType.Qty) {
             CategoryValueMap<Long, ThresholdType> qtyUnitized = qtyAndAmountForThreshold.collect(ThresholdType.Qty);
-            units = qtyUnitized.unitize(thresholdUnitQty);
+            units = qtyUnitized.unitize(thresholdUnitQty, ThresholdType.Qty);
             qtyAndAmountForThreshold.scale(qtyUnitized, ThresholdType.Qty);
         }
 
         if (r.getApplicableUnitType() == ApplicableType.Qty) {
             CategoryValueMap<Long, ThresholdType> applicableUnitQty = dmc.ruleGroupProductQuantity.get(applicableRuleGroupId).collect(applicableProducts);
             applicableUnitQty.scale(units * r.getApplicableUnit());
-            qtyAndDiscountAmount = qtyAndDiscountAmount.scaleTo(applicableUnitQty, ThresholdType.Qty);
+            //qtyAndDiscountAmount = qtyAndDiscountAmount.scaleTo(applicableUnitQty, ThresholdType.Qty);
+            qtyAndDiscountAmount.scale(applicableUnitQty, ThresholdType.Qty);
             qtyAndDiscountAmount.compute(ThresholdType.Amount, n -> n.doubleValue() * r.getApplicableDiscount());
-            qtyAndOriginalAmount = qtyAndOriginalAmount.scaleTo(applicableUnitQty, ThresholdType.Qty);
+
+            qtyAndOriginalAmount.scale(applicableUnitQty, ThresholdType.Qty);
+
         } else {
             if (Optional.ofNullable(r.getOverrideAmount()).orElse(0.0) > 0) {
                 double totalAmount = qtyAndDiscountAmount.sum(ThresholdType.Amount).doubleValue();
@@ -334,6 +346,7 @@ public class DealMatchService {
 
         private final Map<Entity, Map<Dimension, Number>> valueMap = new HashMap<>();
         private final Predicate<Entity> allEntities = entity -> true;
+        private final Predicate<Dimension> allDimensions = dimension -> true;
         private final Function<Dimension, Predicate<Dimension>> specificDimensions = dim -> (d -> d.equals(dim));
 
         public CategoryValueMap() {}
@@ -347,7 +360,7 @@ public class DealMatchService {
         }
 
         public Number get(Entity entity, Dimension dim) {
-            return Optional.ofNullable(valueMap.get(entity)).map(m -> m.get(dim)).orElse(0.0);
+            return Optional.ofNullable(valueMap.get(entity)).map(m -> m.get(dim)).orElse(0);
         }
 
         public void put(Entity entity, Dimension dim, Number val) {
@@ -370,7 +383,7 @@ public class DealMatchService {
 
         public void merge(CategoryValueMap<Entity, Dimension> operand, Dimension dimension, BiFunction<Number, Number, Number> mergeOperation) {
             //operand.forEachFiltered(allEntities, specificDimensions.apply(dimension), (e, d, v) -> merge(e, d, v, mergeOperation));
-            operand.forEachFilteredDimensionEntry(allEntities, dim -> dim.equals(dimension), (entity, dimEntry) -> this.merge(entity, dimension, dimEntry.getValue(), mergeOperation));
+            operand.forEachFilteredDimensionEntry(allEntities, specificDimensions.apply(dimension), (entity, dimEntry) -> this.merge(entity, dimension, dimEntry.getValue(), mergeOperation));
         }
 
         private void merge(CategoryValueMap<Entity, Dimension> operand, BiFunction<Number, Number, Number> mergeOperation) {
@@ -414,10 +427,13 @@ public class DealMatchService {
         }
 
         public void scale(CategoryValueMap<Entity, Dimension> scaleMap, Dimension scalingDimension) {
-            forEachDimensionEntry((entity, dimensionEntry) -> {
-                double factor = scaleMap.get(entity, scalingDimension).doubleValue() / this.get(entity, scalingDimension).doubleValue();
-                dimensionEntry.setValue(dimensionEntry.getValue().doubleValue() * factor);
-            });
+            CategoryValueMap<Entity, Dimension> ratioMap = new CategoryValueMap<>();
+            for (Entity entity : valueMap.keySet()) {
+                double ratio = scaleMap.get(entity, scalingDimension).doubleValue() / this.get(entity, scalingDimension).doubleValue();
+                ratioMap.put(entity, scalingDimension, ratio);
+            }
+
+            forEachValue((entity, dimension, value) -> value.doubleValue() * ratioMap.get(entity, scalingDimension).doubleValue());
         }
 
         public void scale(Number operand) {
@@ -425,15 +441,15 @@ public class DealMatchService {
         }
 
         //quantized values in all dimensions to multiples of unit definition, returning number of units
-        public long unitize(CategoryValueMap<Entity, Dimension> unitDefinition, Dimension... dimensions) {
+        public long unitize(CategoryValueMap<Entity, Dimension> unitDefinition, Dimension dimension) {
             long numUnits = zipStream(this, unitDefinition, (baseValue, joinValue) -> new ZipEntryValue(baseValue, joinValue))
-                    .filter(zipEntry -> filterIfPresent(Set.of(dimensions)).test(zipEntry.dimension))
+                    .filter(zipEntry -> zipEntry.dimension.equals(dimension))
                     .map(ZipEntry::getValues)
                     .mapToLong(ZipEntryValue::divideAsLong)
                     .min()
                     .orElse(0L);
 
-            forEachFilteredValue(allEntities, filterIfPresent(Set.of(dimensions)), (entity, dimension, value) -> numUnits * unitDefinition.get(entity, dimension).doubleValue());
+            forEachFilteredValue(allEntities, filterIfPresent(Set.of(dimension)), (e, d, v) -> numUnits * unitDefinition.get(e, d).doubleValue());
             return numUnits;
         }
 
@@ -457,22 +473,6 @@ public class DealMatchService {
                 result.put(entity, dimEntry.getKey(), dimEntry.getValue());
             });
             return result;
-        }
-
-        public void forEach(ValueConsumer<Entity, Dimension> consumer) {
-            valueMap.forEach((entity, dimMap) -> dimMap.forEach((dim, val) -> consumer.accept(entity, dim, val)));
-        }
-
-        public void forEachValue(ValueMapper<Entity, Dimension> mapper) {
-            forEachDimensionEntry((entity, dimensionEntry) -> dimensionEntry.setValue(mapper.accept(entity, dimensionEntry.getKey(), dimensionEntry.getValue())));
-        }
-
-        public void forEachFilteredValue(Predicate<Dimension> dimensionPredicate, ValueMapper<Entity, Dimension> mapper) {
-            forEachFilteredDimensionEntry(allEntities, dimensionPredicate, (entity, dimensionEntry) -> dimensionEntry.setValue(mapper.accept(entity, dimensionEntry.getKey(), dimensionEntry.getValue())));
-        }
-
-        public void forEachFilteredValue(Predicate<Entity> entityPredicate, Predicate<Dimension> dimensionPredicate, ValueMapper<Entity, Dimension> mapper) {
-            forEachFilteredDimensionEntry(entityPredicate, dimensionPredicate, (entity, dimensionEntry) -> dimensionEntry.setValue(mapper.accept(entity, dimensionEntry.getKey(), dimensionEntry.getValue())));
         }
 
         public Number sum(Dimension dim) {
@@ -502,8 +502,43 @@ public class DealMatchService {
                     .allMatch(ZipEntryValue::greaterThanOrEqual);
         }
 
+        public String toString(){
+            StringBuilder sb = new StringBuilder();
+            for (Entity entity : valueMap.keySet()) {
+
+                String dimensionValues = valueMap.get(entity).entrySet()
+                        .stream()
+                        .map(e -> e.getKey()+":"+e.getValue())
+                        .sorted(Comparator.reverseOrder())
+                        .collect(joining(", "));
+
+                if (sb.length() > 0) {
+                    sb.append("\n");
+                }
+                sb.append("Product ").append(entity).append(" -> ");
+                sb.append("[").append(dimensionValues).append("]");
+            }
+            return sb.toString();
+        }
+
         private Map<Dimension, Number> get(Entity entity) {
             return valueMap.computeIfAbsent(entity, e -> new HashMap<>());
+        }
+
+        private void forEach(ValueConsumer<Entity, Dimension> consumer) {
+            valueMap.forEach((entity, dimMap) -> dimMap.forEach((dim, val) -> consumer.accept(entity, dim, val)));
+        }
+
+        private void forEachValue(ValueMapper<Entity, Dimension> mapper) {
+            forEachDimensionEntry((entity, dimensionEntry) -> dimensionEntry.setValue(mapper.accept(entity, dimensionEntry.getKey(), dimensionEntry.getValue())));
+        }
+
+        private void forEachFilteredValue(Predicate<Dimension> dimensionPredicate, ValueMapper<Entity, Dimension> mapper) {
+            forEachFilteredDimensionEntry(allEntities, dimensionPredicate, (entity, dimensionEntry) -> dimensionEntry.setValue(mapper.accept(entity, dimensionEntry.getKey(), dimensionEntry.getValue())));
+        }
+
+        private void forEachFilteredValue(Predicate<Entity> entityPredicate, Predicate<Dimension> dimensionPredicate, ValueMapper<Entity, Dimension> mapper) {
+            forEachFilteredDimensionEntry(entityPredicate, dimensionPredicate, (entity, dimensionEntry) -> dimensionEntry.setValue(mapper.accept(entity, dimensionEntry.getKey(), dimensionEntry.getValue())));
         }
 
         private void forEachDimensionEntry(DimensionEntryConsumer<Entity, Dimension> consumer) {
@@ -514,8 +549,9 @@ public class DealMatchService {
             valueMap.entrySet().stream()
                     .filter(entityEntry -> entityPredicate == allEntities || entityPredicate.test(entityEntry.getKey()))
                     .forEach(entityEntry ->
-                            entityEntry.getValue().entrySet().stream()
-                                    .filter(dimensionEntry -> dimensionPredicate.test(dimensionEntry.getKey()))
+                            entityEntry.getValue().entrySet()
+                                    .stream()
+                                    .filter(dimensionEntry -> dimensionPredicate == allDimensions || dimensionPredicate.test(dimensionEntry.getKey()))
                                     .forEach(dimensionEntry -> consumer.accept(entityEntry.getKey(), dimensionEntry)));
         }
 
@@ -556,7 +592,6 @@ public class DealMatchService {
         private interface DimensionEntryConsumer<Entity, Dimension> {
             void accept(Entity entity, Map.Entry<Dimension, Number> dimensionEntry);
         }
-
 
         private class ZipEntry {
             final Entity entity;
