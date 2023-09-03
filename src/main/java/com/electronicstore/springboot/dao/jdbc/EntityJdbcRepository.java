@@ -27,7 +27,7 @@ import static java.util.Collections.emptyList;
 
 public class EntityJdbcRepository<E> implements Datastore<E, Long>
 {
-    private static RowMapper<Integer> intRowMapper = SingleColumnRowMapper.newInstance(Integer.class);;
+    private static final RowMapper<Integer> intRowMapper = SingleColumnRowMapper.newInstance(Integer.class);
 
     @Autowired
     private NamedParameterJdbcTemplate jdbcTemplate;
@@ -36,17 +36,17 @@ public class EntityJdbcRepository<E> implements Datastore<E, Long>
     private ApplicationContext appContext;
 
 
-    private JdbcTableMetadata<E> metadata;
-    private BiFunction<E, Boolean, SqlParameterSource> entityParamSource;
-    private BiConsumer<GeneratedKeyHolder, E> keySetter;
-    private RowMapper<E> entityRowMapper;
+    private final JdbcTableMetadata<E> metadata;
+    private final BiFunction<E, Boolean, SqlParameterSource> entityParamSource;
+    private final BiConsumer<GeneratedKeyHolder, E> keySetter;
+    private final RowMapper<E> entityRowMapper;
 
-    private String queryByKey;
-    private String queryByMultipleKeys;
-    private String queryExistByKey;
-    private String queryAll;
-    private String insertOrUpdate;
-    private String deleteFromTable;
+    private final String queryByKey;
+    private final String queryByMultipleKeys;
+    private final String queryExistByKey;
+    private final String queryAll;
+    private final String insertOrUpdate;
+    private final String deleteFromTable;
 
     public EntityJdbcRepository(JdbcTableMetadata<E> md) {
         metadata = md;

@@ -61,14 +61,15 @@ public class ApplicationConfig {
                 config.setMaximumPoolSize(10);
                 config.setMinimumIdle(10);
                 config.setAutoCommit(true);
+
                 HikariDataSource ds = new HikariDataSource(config);
-                System.out.println("HikariPoolMxBean = "+ds.getHikariPoolMXBean());
 
                 (((AnnotationConfigServletWebServerApplicationContext)context).getBeanFactory())
                         .registerSingleton("hikariPoolMXBean", ds.getHikariPoolMXBean());
                 return ds;
             }
         };
+
 
         EmbeddedDatabase database = new EmbeddedDatabaseBuilder()
                 .setName("electronicstoredb")
@@ -77,6 +78,7 @@ public class ApplicationConfig {
                 .setScriptEncoding("UTF-8")
                 .ignoreFailedDrops(true)
                 .build();
+
         return database;
     }
 

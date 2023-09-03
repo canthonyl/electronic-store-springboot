@@ -1,13 +1,20 @@
 Electronic Store
 ---------------
 
-1) Start the service:
 
+1) Commands to start/stop the service:
+
+    To Start:
     a) Using jar:
-        java -jar build/libs/electronic-store-springboot-0.0.1-SNAPSHOT.jar
-
+```Bash
+java -jar build/libs/electronic-store-springboot-0.0.1-SNAPSHOT.jar
+```
     b) Using bootRun:
-        ./gradlew bootRun
+```Bash
+./gradlew bootRun
+```
+    To Stop using actuator:
+
 
 2) Example scenario:
 
@@ -41,4 +48,3 @@ curl http://localhost:8080/shoppingCarts/2
     Note: 
       * database is currently not persisted to disk
       * database schema and product categories are created on startup (schema.sql, data.sql)
-    
