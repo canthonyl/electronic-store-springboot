@@ -1,6 +1,5 @@
 package com.electronicstore.springboot.service;
 
-import com.electronicstore.springboot.dao.EntityDatastore;
 import com.electronicstore.springboot.dto.DealMatchRequest;
 import com.electronicstore.springboot.dto.DealMatchResponse;
 import com.electronicstore.springboot.model.DiscountRule;
@@ -24,20 +23,19 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 
+import static com.electronicstore.springboot.model.DiscountRule.ApplicableProductType;
+import static com.electronicstore.springboot.model.DiscountRule.ApplicableType;
+import static com.electronicstore.springboot.model.DiscountRule.ThresholdProductType;
+import static com.electronicstore.springboot.model.DiscountRule.ThresholdType;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
-import static com.electronicstore.springboot.model.DiscountRule.ThresholdType;
-import static com.electronicstore.springboot.model.DiscountRule.ThresholdProductType;
-import static com.electronicstore.springboot.model.DiscountRule.ApplicableType;
-import static com.electronicstore.springboot.model.DiscountRule.ApplicableProductType;
 
 @Service
 public class DealMatchService {
@@ -54,7 +52,11 @@ public class DealMatchService {
         Set<Long> allCategories = request.getCharacteristic().get(DiscountRuleSetting.Group.category).keySet();
         Set<Long> allProducts = request.getCharacteristic().get(DiscountRuleSetting.Group.product).keySet();
         CategoryValueMap<Long, ThresholdType> productQtyAndAmount = new CategoryValueMap<>(request.getCharacteristic().get(DiscountRuleSetting.Group.product));
-        Map<Long, Map<Long, Map<ThresholdType, Double>>> itemDetailsByProductId = request.getMapToCartItemId();
+        //Map<Long, Map<Long, Map<ThresholdType, Double>>> itemDetailsByProductId = request.getMapToCartItemId();
+        Map<Long, CategoryValueMap<Long, ThresholdType>> itemDetailsByProductId = new HashMap<>();
+        request.getMapToCartItemId().forEach((productId, valuesByItemId) -> {
+           itemDetailsByProductId.put(productId, new CategoryValueMap<>(valuesByItemId));
+        });
 
         DealMatchContext dmc = new DealMatchContext();
         dmc.setProducts(productService.getProducts(allProducts));
@@ -123,19 +125,19 @@ public class DealMatchService {
 
                     for (Long productId : discountProductIds) {
                         //Map<ThresholdType, Double> discountDetail = discountDetailsByProduct.get(productId);
-                        Double discountAmount = discountDetailsByProduct.get(productId, ThresholdType.Amount).doubleValue();
-                        Long totalQuantityEligibleForDiscount = discountDetailsByProduct.get(productId, ThresholdType.Qty).longValue();
-                        Double discountPerItem = discountAmount / totalQuantityEligibleForDiscount;
+                        double discountAmount = discountDetailsByProduct.get(productId, ThresholdType.Amount).doubleValue();
+                        long totalQuantityEligibleForDiscount = discountDetailsByProduct.get(productId, ThresholdType.Qty).longValue();
+                        double discountPerItem = discountAmount / totalQuantityEligibleForDiscount;
 
-                        Map<Long, Map<ThresholdType, Double>> relatedItems = itemDetailsByProductId.get(productId);
-                        Iterator<Long> itemIdIterator = relatedItems.keySet().iterator();
+                        CategoryValueMap<Long, ThresholdType> relatedItems = itemDetailsByProductId.get(productId);
+                        Iterator<Long> itemIdIterator = relatedItems.entitiesKeySet().iterator();
                         while (totalQuantityEligibleForDiscount > 0L) {
                             Long itemId = itemIdIterator.next();
-                            Map<ThresholdType, Double> relatedItemDetail = relatedItems.get(itemId);
-                            double qtyReduced = Math.min(relatedItemDetail.get(ThresholdType.Qty), totalQuantityEligibleForDiscount);
+                            //Map<ThresholdType, Double> relatedItemDetail = relatedItems.get(itemId);
+                            long qtyReduced = Math.min(relatedItems.get(itemId, ThresholdType.Qty).longValue(), totalQuantityEligibleForDiscount);
                             double amountReduced = qtyReduced * discountPerItem;
-                            relatedItemDetail.merge(ThresholdType.Qty, qtyReduced * -1, Double::sum);
-                            relatedItemDetail.merge(ThresholdType.Amount, amountReduced * -1, Double::sum);
+                            relatedItems.add(itemId, ThresholdType.Qty, qtyReduced * -1);
+                            relatedItems.add(itemId, ThresholdType.Amount, amountReduced * -1);
 
                             totalQuantityEligibleForDiscount -= (long) qtyReduced;
                             response.getItemIdToDeals().computeIfAbsent(itemId, id -> new LinkedList<>()).add(rule);
@@ -199,16 +201,16 @@ public class DealMatchService {
 
         for (DiscountRule r : allDeals) {
             CategoryValueMap<Long, ThresholdType> discountDetail = new CategoryValueMap<>();
-            CategoryValueMap<Long, ThresholdType> workingThresholdValues = new CategoryValueMap<>(productQtyAndAmount);
+            CategoryValueMap<Long, ThresholdType> workingProductQtyAndAmount = new CategoryValueMap<>(productQtyAndAmount);
 
-            double calculatedDiscountAmount = calculateDiscountAmount(r, dmc, workingThresholdValues, thresholdProducts, true, discountDetail);
+            double calculatedDiscountAmount = calculateDiscountAmount(r, dmc, workingProductQtyAndAmount, thresholdProducts, true, discountDetail);
 
             if (calculatedDiscountAmount > bestSavingDiscountAmount) {
                 ruleId = r.getId();
                 bestSavingDiscountAmount = calculatedDiscountAmount;
                 discountDetails = discountDetail;
                 changesToCart = new CategoryValueMap<>(productQtyAndAmount);
-                changesToCart.subtract(workingThresholdValues);
+                changesToCart.subtract(workingProductQtyAndAmount);
             }
         }
 
@@ -276,16 +278,16 @@ public class DealMatchService {
         return bestSavingAmount;
     }
 
-    private double calculateDiscountAmount(DiscountRule r, DealMatchContext dmc, CategoryValueMap<Long, ThresholdType> thresholdValues, Set<Long> thresholdProducts, boolean updateQuantity, CategoryValueMap<Long, ThresholdType> discountValues) {
+    private double calculateDiscountAmount(DiscountRule r, DealMatchContext dmc, CategoryValueMap<Long, ThresholdType> productQtyAndAmount, Set<Long> thresholdProducts, boolean updateQuantity, CategoryValueMap<Long, ThresholdType> discountValues) {
         Long applicableRuleGroupId = r.getApplicableProductType() == ApplicableProductType.Identity ? r.getRuleGroupId() : r.getApplicableRuleGroupId();
         Set<Long> applicableProducts = r.getApplicableProductType() == ApplicableProductType.Identity ? thresholdProducts :
                 dmc.ruleGroupCoveredProducts.get(r.getApplicableRuleGroupId());
 
         CategoryValueMap<Long, ThresholdType> thresholdUnitQty = dmc.ruleGroupProductQuantity.get(r.getRuleGroupId()).scaleTo(r.getThresholdUnit());
 
-        CategoryValueMap<Long, ThresholdType> qtyAndAmountForThreshold = thresholdValues.collect(thresholdProducts);
-        CategoryValueMap<Long, ThresholdType> qtyAndDiscountAmount = thresholdValues.collect(applicableProducts);
-        CategoryValueMap<Long, ThresholdType> qtyAndOriginalAmount = thresholdValues.collect(applicableProducts);
+        CategoryValueMap<Long, ThresholdType> qtyAndAmountForThreshold = productQtyAndAmount.collect(thresholdProducts);
+        CategoryValueMap<Long, ThresholdType> qtyAndDiscountAmount = productQtyAndAmount.collect(applicableProducts);
+        CategoryValueMap<Long, ThresholdType> qtyAndOriginalAmount = productQtyAndAmount.collect(applicableProducts);
 
         long units = 0L;
         if (r.getThresholdUnitType() == ThresholdType.Qty) {
@@ -297,12 +299,9 @@ public class DealMatchService {
         if (r.getApplicableUnitType() == ApplicableType.Qty) {
             CategoryValueMap<Long, ThresholdType> applicableUnitQty = dmc.ruleGroupProductQuantity.get(applicableRuleGroupId).collect(applicableProducts);
             applicableUnitQty.scale(units * r.getApplicableUnit());
-            //qtyAndDiscountAmount = qtyAndDiscountAmount.scaleTo(applicableUnitQty, ThresholdType.Qty);
             qtyAndDiscountAmount.scale(applicableUnitQty, ThresholdType.Qty);
             qtyAndDiscountAmount.compute(ThresholdType.Amount, n -> n.doubleValue() * r.getApplicableDiscount());
-
             qtyAndOriginalAmount.scale(applicableUnitQty, ThresholdType.Qty);
-
         } else {
             if (Optional.ofNullable(r.getOverrideAmount()).orElse(0.0) > 0) {
                 double totalAmount = qtyAndDiscountAmount.sum(ThresholdType.Amount).doubleValue();
@@ -316,9 +315,9 @@ public class DealMatchService {
         }
 
         if (updateQuantity) {
-            thresholdValues.subtract(qtyAndAmountForThreshold);
+            productQtyAndAmount.subtract(qtyAndAmountForThreshold);
             if (!r.getRuleGroupId().equals(applicableRuleGroupId)) {
-                thresholdValues.subtract(qtyAndOriginalAmount);
+                productQtyAndAmount.subtract(qtyAndOriginalAmount);
             }
         }
 
@@ -342,7 +341,7 @@ public class DealMatchService {
         return result;
     }
 
-    class CategoryValueMap<Entity, Dimension> {
+    static class CategoryValueMap<Entity, Dimension> {
 
         private final Map<Entity, Map<Dimension, Number>> valueMap = new HashMap<>();
         private final Predicate<Entity> allEntities = entity -> true;
@@ -639,7 +638,6 @@ public class DealMatchService {
 
     class DealMatchContext {
 
-        List<DiscountRuleSetting> allRuleSettings;
         Map<Long, Set<Long>> ruleGroupCoveredCategories;
         Map<Long, Set<Long>> ruleGroupCoveredProducts;
         Map<Long, CategoryValueMap<Long, ThresholdType>> ruleGroupProductQuantity;
@@ -658,8 +656,7 @@ public class DealMatchService {
             productByCatId = productById.values().stream().collect(groupingBy(Product::getCategoryId, mapping(Product::getId, toSet())));
         }
 
-        public void setAllRuleSettings(List<DiscountRuleSetting> ruleSettings) {
-            allRuleSettings = ruleSettings;
+        public void setAllRuleSettings(List<DiscountRuleSetting> allRuleSettings) {
 
             ruleGroupCoveredCategories = allRuleSettings.stream()
                     .filter(s -> s.getCategoryId() != null)

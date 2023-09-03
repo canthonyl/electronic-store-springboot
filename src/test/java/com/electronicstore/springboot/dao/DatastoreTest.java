@@ -5,13 +5,21 @@ import com.electronicstore.springboot.dao.Datastore;
 import com.electronicstore.springboot.dao.EntityDatastore;
 import com.electronicstore.springboot.model.Product;
 import com.zaxxer.hikari.HikariPoolMXBean;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
+import org.springframework.jdbc.datasource.init.DatabasePopulator;
+import org.springframework.jdbc.datasource.init.DatabasePopulatorUtils;
+import org.springframework.jdbc.datasource.init.ResourceDatabasePopulator;
 import org.springframework.test.annotation.DirtiesContext;
 
+import javax.sql.DataSource;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,21 +29,26 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.annotation.DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD;
+import static org.springframework.test.annotation.DirtiesContext.MethodMode.AFTER_METHOD;
 
 @DirtiesContext(classMode = AFTER_EACH_TEST_METHOD)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 public class DatastoreTest {
 
     @Autowired
-    EntityDatastore<Product> entityDatastore;
-
-    Product request1, request2, request3, request4, request5;
-    Product category1, category2, category3;
+    private EntityDatastore<Product> entityDatastore;
 
     @Autowired
-    ApplicationContext appContext;
+    private ApplicationContext appContext;
 
-    HikariPoolMXBean poolMXBean;
+    @Autowired
+    private DataSource dataSource;
+
+    private HikariPoolMXBean poolMXBean;
+
+    private Product request1, request2, request3, request4, request5;
+    private Product category1, category2, category3;
+
 
     @BeforeEach
     public void setup(){
